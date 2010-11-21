@@ -1,0 +1,41 @@
+Improve object selection for manipulator tools.
+Finish Snaps support for various tools.  (tangent, on x, on y, 45deg, etc.)
+Add tool bits management dlog.  Support bevels bits.
+Add a mill capability editing dialog.
+Finish Boolean geometry code.
+Enable pocketing.
+Show live cutwidth and path directions for cut objects.
+Change node display code to only show nodes for last selected/clicked object.
+Fix node selection rectangle.
+
+
+Plugins:
+    Add support for drag when doing object construction.
+    Allow tools to select objects instead of only points during construction.
+    Change icon loading to be more consistent and easier for plugins to use.
+    Fix writing of groups info to DXF file format.
+    Add way to create tool specific menu items.
+    Move line join command to tool specific menu.
+    Move curve simplification command to tool specific menu.
+
+
+CAD basics:
+    Remove scrollregion limitations
+    Add creation of approximate Beziers from freehand drawn line.
+    Add support for Undo/Redo of object/node selection.
+
+
+CAD advanced:
+    Add scripting support for creating CAD objects.
+    Complete object decomposition for beziers, etc.
+    Add decomposing of objects in the GUI itself.
+    Add contraints support.
+    Add object joining into complex paths.
+    Show direction of lines.
+    Show toolpaths based on bit widths, depths, and cutsides.
+
+
+Future:
+    Add AI/EPS/PS/PDF file format READ/WRITE support.
+    Add dialog for better potrace/autotrace image tracing support.
+

@@ -1,0 +1,119 @@
+tkCAD 0.215
+Added Diameter confpane editable field to some arcs and circles.
+Added a third level of grid lines, and improved grid spacing heuristics.
+Added unit system info to file format, so units are persistent per file.
+Added ability to persistently show or hide gridlines and origin.
+Fixed bug with displaying fractional inches in ruler in Feet mode.
+Fixed bug with displaying grouped objects in the wrong color.
+Changed Open Recent menu to not list nonexistent or non-readable files.
+
+
+
+tkCAD 0.205
+Fixed bug when slicing objects that don't support slicing.
+Fixed bug with centerpoint arcs slicing out of range.
+Fixed bug with slicing on a bezier or line control point.
+Fixed sporatic bug with selecting multiple objects of different types.
+Fixed several bugs with XML/SVG parsing routines.
+Fixed poor font bezierization at small font sizes.
+Fixed some bugs working with <text> and <tspan> objects in SVG files.
+Fixed processing of rotation transforms in SVG files.
+Fixed converting of rectangles and midpoint lines to bezier curves.
+Fixed SVG scaling and placement on import.
+Fixed moving objects by their centerpoint node.
+Fixed symmetric scaling of arcs to not convert them to beziers.
+Fixed confpane for multiple objects with common option fields where a subset
+  of values are shared.
+Fixed bug with bezier smooth function, that created backtracking lines.
+Fixed error msgs with using a modifier key when using flip or shear tools.
+Fixed error with joining arcs to lines.
+Fixed sizing error when exporting SVG.
+Fixed problem with SVG Locked Objects when exporting to SVG for importing
+  into Corel Draw.
+Added slicing support to all object types, converting to lines or beziers as
+  needed.  Circles convert to arcs when sliced.
+Added Bending and Wrapping transform tools.
+Added Millbit Standard font for engraving.
+Added TextArc object type for editable text arcs.
+Added Grouping/Ungrouping of objects.
+Added Group support for SVG file reading and writing.
+Added keybindings for tool pallet items.
+Added alignment and centering tools.
+Added an "Open Recent >" submenu.
+Added display of Height and Width of selected objects.
+Added hint message to let you know what your next click will do.
+Changed arcs to treat coincident control points as a 360 degree arc.
+Changed detached tools windows to have topside titlebars, for easier moving.
+
+
+
+tkCAD 0.200
+Added support for stock material in the .tkcad file format.
+Added Safe-Z setting in g-code generation dlog.
+Added WASD/QE 3D rotation controls to backtracer.
+Added support for making spur gear patterns, with various tooth shapes.
+Added Export file option, for exporting to DXF or SVG.
+Added "SVG For Laser" export format that writes SVG with kerf offsets.
+Added Bitmap Image object type, with support for potrace/autotrace vector tracing.
+Added progress meter for native file format reading and writing.
+Added Stroke/CAM tool config window to the left.
+Optimized bezier intersection detection.
+Optimized G-Code output somewhat.  Or at least made it less pathological.
+Optimized SVG and native file format reading a LOT.
+Optimized SVG loading progress bar.
+Changed confpane float entries to accept equations.
+Changed PageUp/PageDown and autoscrolling in backtracer to be quantized.
+Changed backtracer trace position marker to be more obvious.
+Changed backtracer to jump to g-code trace position of lines clicked on.
+Changed backtracer to default to top-down view with bitwidth rendering.
+Changed backtracer playback mode to be smoother.
+Changed some tools to use new routines for drawing centerlines and arcs.
+Changed Beziers to be much easier to create.
+Changed Line/Stroke info to be more persistent, and always available.
+Fixed some of the drawing alignment issues.
+Fixed bugs with printing bitmap images.
+Fixed bugs with resizing rotated images with fixed aspect ratios.
+
+
+
+tkCAD 0.101
+Added linear dimensioning tools.
+Added feed and Speeds wizard.
+Added layer renaming.
+Added layer re-ordering.
+Added Re-orient tool to change which tool in a closed path is the start node.
+Added Linear Copy tool.
+Added cutbit, cutdepth, and cutside confpane options for all objects.
+Added G-Code generation for objects with cutbit set.
+Added G-Code backtracer to show generated toolpaths.
+Added G-Code generator wizards for gears and worms.
+Changed translation of beziers to lines to be a bit more accurate.
+Changed endpoint node markers to be more obvious.
+Changed offset copy to remember offset between uses.
+Changed linewidth to be measured in inch units instead of points.
+Changed Scale and Skew to allow axis constraint by pressing Shift.
+Fixed node markers so they stay on top on the line as you edit it.
+Fixed Feed&Speed wizard to remove improper feed limit.
+Fixed Select All to not select from nonvisible layers.
+Fixed layer hiding to deselect objects on that layer.
+Fixed Undo/Redo for layer color changes.
+Fixed bug with failing confpane button invocations.
+Fixed some bugs with offsets code with sharply concave sections.
+Fixed bug with cancelled file load deleting all layers.
+Fixed slice with multiple selected items.
+Fixed Quit to ask to save changed files.
+Fixed Slice to make new object keep the same metadata as the original.
+Fixed Offset Copy to make new object keep the same metadata as the original.
+Fixed scrolling problems in layers subwidow.
+Fixed bug with Bezierize function.
+Fixed several bugs with offset copy insets.
+Fixed Command+W close window command with non-CAD canvas windows.
+Fixed support for opening multiple files at once.
+
+
+
+tkCAD 0.100
+Prepared the first .app release.
+
+
+

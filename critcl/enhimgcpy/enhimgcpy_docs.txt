@@ -1,0 +1,18 @@
+
+TCLCMD: image_copy source-image target-image ?options ...?
+  The options can be any of those accepted by the photo copy command,
+  with a few additions.  The additions are:
+      -scale X ?Y?       Scales the image by X and Y factors. Can be floats.
+      -rotate DOUBLE     Rotates the image by the given number of degrees.
+      -mirror STRING     Mirrors in "x", "y" or "-" (both) directions.
+      -filter ?STRING?   One of "Mitchell", "Lanczos", or "BlackmanSinc".
+      -blur DOUBLE       Blurs the image with the given blur radius.
+      -smoothedge INT    Anti-alias the edges up to the given pixel width.
+
+ If only one value is given to the -scale option, then the Y scaling factor
+   will be equal to the X sfaling factor.
+ If no value is given to the -filter option, "Mitchell" is assumed.
+ If no -filter option is given at all, then Nearest Neighbor is used.
+ If the value given to -smoothedge is 0, then no edge smoothing is done.
+ The -edgesmooth option can only take values of 0, 1 or 2.
+

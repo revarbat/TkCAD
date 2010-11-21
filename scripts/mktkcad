@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -x
+
+cadsrc=$HOME/dev/tkCAD
+tksrcdir=$cadsrc/tksrc
+resourcesdir=$cadsrc/resources
+destapp=$HOME/dev/Tcl/TkCAD.app
+scriptsdir=$destapp/Contents/Resources/Scripts
+
+origdir=`pwd`
+cd $HOME/dev/Tcl
+
+version=`head -1 $cadsrc/changes.txt | awk '{print $2}' | tr -d ''`
+rm -rf $destapp
+
+./mkapp TkCAD $version TkCD "Fuzzball Software"
+
+mkdir $scriptsdir
+mkdir $scriptsdir/tkCAD
+cp -r $tksrcdir/main.tcl $tksrcdir/images $tksrcdir/lib $tksrcdir/cncfonts $scriptsdir/tkCAD
+cp $resourcesdir/Info.plist $destapp/Contents
+cp $resourcesdir/AppMain.tcl $scriptsdir
+
+killexts="Canvas3d Memchan QuickTimeTcl Trf Tclapplescript Tclresource tclAE tcllib httpd snack sqlite tls usleep bonjour"
+for ext in $killexts; do
+    if [ "x$ext" != "x" ]; then 
+	echo "rm -rf $destapp/Contents/lib/$ext*"
+	rm -rf $destapp/Contents/lib/$ext*
+    fi
+done
+
+mkdir $destapp/Contents/Resources/bin
+cp -f /usr/local/bin/autotrace  $destapp/Contents/Resources/bin
+cp -f /usr/local/bin/potrace  $destapp/Contents/Resources/bin
+cp -f /usr/local/bin/mkbitmap  $destapp/Contents/Resources/bin
+
+cp -f $resourcesdir/TkCD.icns $destapp/Contents/Resources
+find $scriptsdir -type d -name CVS -exec rm -rf {} \; -prune
+
+./mkdmg TkCAD $version TkCAD.app $cadsrc/examples
+
+rm -rf $cadsrc/TkCAD.app
+cp -a TkCAD.app $cadsrc
+cp -a TkCAD*.dmg $cadsrc/builds/MacOSX/
+
+cd $origdir
+

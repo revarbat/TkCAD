@@ -1,0 +1,16 @@
+<tkcad formatversion="1.0" units="inches" material="Aluminum">
+  <layer name="Insets" color="#000" cutbit="0" cutdepth="0.0">
+    <cadobject type="CIRCLECTR" coords="0.0 0.0 -0.751 0.0" cutbit="5" cutdepth="-0.1875" cutside="inside" />
+    <cadobject type="TAPHOLE" coords="-0.928 -0.928" size="#10" pitch="fine" cutbit="5" cutdepth="-0.1875" cutside="inside" />
+    <cadobject type="TAPHOLE" coords="-0.928 0.928" size="#10" pitch="fine" cutbit="5" cutdepth="-0.1875" cutside="inside" />
+    <cadobject type="TAPHOLE" coords="0.928 0.928" size="#10" pitch="fine" cutbit="5" cutdepth="-0.1875" cutside="inside" />
+    <cadobject type="TAPHOLE" coords="0.928 -0.928" size="#10" pitch="fine" cutbit="5" cutdepth="-0.1875" cutside="inside" />
+    <cadobject type="SCREWSLOT" coords="-1.75 0.625 -1.25 0.625" size="#10" fit="close" capstyle="round" cutbit="5" cutdepth="-0.1875" cutside="inside" />
+    <cadobject type="SCREWSLOT" coords="-1.75 -0.625 -1.25 -0.625" size="#10" fit="close" capstyle="round" cutbit="5" cutdepth="-0.1875" cutside="inside" />
+    <cadobject type="SCREWSLOT" coords="1.25 -0.625 1.75 -0.625" size="#10" fit="close" capstyle="round" cutbit="5" cutdepth="-0.1875" cutside="inside" />
+    <cadobject type="SCREWSLOT" coords="1.25 0.625 1.75 0.625" size="#10" fit="close" capstyle="round" cutbit="5" cutdepth="-0.1875" cutside="inside" />
+  </layer>
+  <layer name="Cutouts" color="black" cutbit="0" cutdepth="0.0">
+    <cadobject type="LINE" coords="-2.0 -0.9 -1.12 -1.12 1.12 -1.12 2.0 -0.9 2.0 0.9 1.12 1.12 -1.12 1.12 -2.0 0.9 -2.0 -0.9" cutbit="5" cutdepth="-0.1875" cutside="outside" />
+  </layer>
+</tkcad>

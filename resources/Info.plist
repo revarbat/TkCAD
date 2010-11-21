@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>tkcad</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>application/x-tkcad</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>TkCAD file</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>TkCD</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>dxf</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>application/x-dxf</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>AutoCAD DXF file</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>svg</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>image/x-svg</string>
+				<string>image/svg</string>
+				<string>image/svg+xml</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Scalable Vector Graphic file</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>nc</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>text/x-gcode</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Numeric Control file</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>cnc</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>text/x-gcode</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Computer Numeric Control file</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>tap</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>text/x-gcode</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Tap file</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>gcode</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>text/x-gcode</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>G-Code CNC file</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>TkCAD</string>
+	<key>CFBundleGetInfoString</key>
+	<string>TkCAM 0.205, Copyright © 2008 Belfry Software</string>
+	<key>CFBundleIconFile</key>
+	<string>TkCD.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.tcltk.wish.tkcd</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+	</array>
+	<key>CFBundleName</key>
+	<string>TkCAD</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.205</string>
+	<key>CFBundleSignature</key>
+	<string>TkCD</string>
+	<key>CFBundleVersion</key>
+	<string>0.205</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.3.0</string>
+	<key>LSRequiresCarbon</key>
+	<true/>
+	<key>NSAppleScriptEnabled</key>
+	<true/>
+</dict>
+</plist>

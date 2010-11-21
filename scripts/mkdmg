@@ -1,0 +1,58 @@
+#!/bin/sh
+#
+# Creates a disk image (dmg) on Mac OS X from the command line.
+# usage:
+#    mkdmg <volname> <vers> <srcdir>
+#
+# Where <volname> is the name to use for the mounted image, <vers> is the version
+# number of the volume and <srcdir> is where the contents to put on the dmg are.
+#
+# The result will be a file called <volname>-<vers>.dmg
+
+set -x
+
+if [ $# -lt 3 ]; then
+    echo "usage: mkdmg.sh volname vers files"
+    exit 0
+fi
+
+VOL="$1"
+shift
+VER="$1"
+shift
+FILES="$@"
+
+DMG="tmp-$VOL.dmg"
+
+# create temporary disk image and format, ejecting when done
+SIZE=`du -skc ${FILES} | tail -1 | awk '{print $1}'`
+SIZE=$((${SIZE}/1000+2))
+hdiutil create "$DMG" -megabytes ${SIZE} -ov -type UDIF
+echo
+
+DISK=`hdiutil attach -nomount "$DMG" | grep 'Apple_HFS' | awk '{print $1}'`
+newfs_hfs -v "$VOL" ${DISK}
+echo
+
+hdiutil eject $DISK
+echo
+
+# mount and copy files onto volume
+hdiutil attach  "$DMG"
+echo
+
+cp -Rp ${FILES} "/Volumes/$VOL"
+hdiutil eject $DISK
+echo
+
+hdiutil resize -shrinkonly -sectors min "$DMG"
+echo
+
+# convert to compressed image, delete temp image
+rm -f "${VOL}-${VER}.dmg"
+hdiutil convert "$DMG" -format UDZO -tgtimagekey zlib-level=9 -o "${VOL}-${VER}.dmg"
+echo
+
+rm -f "$DMG"
+
+

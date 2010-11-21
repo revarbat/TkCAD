@@ -1,0 +1,24 @@
+Known bugs:
+    Keyboard accelerators don't work when no CAD windows are open.
+    Keyboard accellerators for snaps only work when canvas has focus.
+    In some odd instances, the offset code will create a wierd line ending
+      when offsetting non-closed paths.
+    Sometimes offsetting will leave extraneous bad loops.
+    You have to select objects with the selector tool before you can use
+      manipulator tools on them.
+    If you select all when in the node selector tool, and there are hundreds
+      of nodes, the CAD slows down a LOT.
+    The nodes aren't immediately shown on selected objects when you select
+      the nodesel tool.
+    The rectangular drag-select marquee doesn't work in nodesel tool mode.
+    Undo doesn't seem to work with all manipulations.
+    Layer renaming is only available via double-clicking on the layer name.
+      We should have context menus for editing layers.
+    No Distribute manipulators available yet.
+    G-Code output is somewhat non-optimal at this time.
+    If you hit a view key (1-9) when the backtracer is still parsing, an
+      error is thrown.
+    Group objects get left around when all grouped objects get deleted.
+    Feed rates for large (1/4") bits appears to be buggy.  Check feed rate code.
+
+

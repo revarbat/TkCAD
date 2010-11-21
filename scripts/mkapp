@@ -1,0 +1,66 @@
+#!/bin/sh
+
+if [ $# != 4 ]; then
+	echo "Usage: $0 APPNAME VERSION ABBR COMPANY"
+	exit -1
+fi
+
+appname=$1
+version=$2
+abbrev=$3
+company=$4
+
+lowabbrev=`echo "$abbrev" | tr 'A-Z' 'a-z'`
+year=`date +%Y`
+copyright="Copyright © $year by $company."
+newline='\
+'
+
+origdir=`pwd`
+destapp=$origdir/$appname.app
+rm -rf $destapp
+mkdir $destapp
+
+cd ~/dev/Tcl/head/build/Applications/Utilities/Wish.app
+
+tar cf - * | ( cd $destapp ; tar xf - )
+
+cd $destapp/Contents
+
+sed "s/>Wish</>$appname</" Info.plist | \
+	sed "s/\(Wish Shell 8.[0-9]\), /$appname $version, $copyright${newline}Based on \1, /" | \
+	sed "s/Wish.icns/$abbrev.icns/" | \
+	sed "s/com.tcltk.wish/com.tcltk.wish.$lowabbrev/" | \
+	sed "s/>Wish</>$appname</" | \
+	sed "s/>WiSH</>$abbrev</" | \
+	sed 's/>8\.[0-9][0-9abp]*</>'$version'</' \
+		> NewInfo.plist
+
+mv NewInfo.plist Info.plist
+
+rm -f pbdevelopment.plist PkgInfo
+
+echo -n "APPL$abbrev" > PkgInfo
+
+cd Resources
+
+mv Wish.icns $abbrev.icns
+mv Wish.rsrc $appname.rsrc
+
+cd ../Frameworks
+
+find . -name '*.a' -exec rm -f {} \;
+find . -name 'tclConfig.sh' -exec rm -f {} \;
+find . -name 'Headers' -type d -exec rm -rf {} \; -prune
+find . -name 'PrivateHeaders' -type d -exec rm -rf {} \; -prune
+find . -name 'tcltest*' -type d -exec rm -rf {} \; -prune
+find . -name '*_debug' -size +20 -exec rm -f {} \;
+#find . -name '*.enc' -size +20 -exec rm -f {} \;
+find . -name 'demos' -type d -exec rm -rf {} \; -prune
+
+cd ../MacOS
+mv Wish $appname
+
+cd $origdir
+
+
