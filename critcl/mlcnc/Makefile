@@ -1,8 +1,6 @@
 PKGNAME=mlcnc_critcl
 SRCS=mlcnc_critcl.tcl
 DOCS=$(subst .tcl,_docs.txt,$(SRCS))
-CXXSRCS=Line.cc testbench.cc
-CXXOBJS=$(subst .cc,.o,$(CXXSRCS))
 
 CRITCL=critcl.kit
 WISHAPP=$(HOME)/dev/Tcl/head/build/Applications/Utilities/Wish.app
@@ -12,10 +10,6 @@ TEADIR=Contents/lib
 PKGINSTDIR=$(WISHAPP)/$(TEADIR)/$(PKGNAME)1.0
 PKGINSTDIR2=$(HOME)/dev/Tcl/head/build/$(PKGNAME)1.0
 PKG=$(LIBDIR)/$(PKGNAME)
-
-CXX=g++
-CXXFLAGS=
-INCLUDES=
 
 
 all: testbench
@@ -36,11 +30,6 @@ install: $(PKG)
 docs: $(DOCS)
 
 clean:
-	rm -rf $(DOCS) $(PKG) $(LIBDIR) $(CXXOBJS)
+	rm -rf $(DOCS) $(PKG) $(LIBDIR)
 
-.cc.o:
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
-
-testbench: $(CXXOBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
 
