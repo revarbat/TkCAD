@@ -1,3 +1,14 @@
+tkCAD 0.220
+Removed silly Text editing dialog.
+Added way for tools to shift focus on a confpane item.
+Fixed some text rendering issues.
+Changed confpane Font Family dialog to be faster to use.
+Changed font family dropdowns to have fewer redundant font names.
+Changed TEXT and TEXTARC tools to update live as you change their text.
+Re-enabled tkPath extension for testing purposes.
+
+
+
 tkCAD 0.215
 Added Diameter confpane editable field to some arcs and circles.
 Added a third level of grid lines, and improved grid spacing heuristics.

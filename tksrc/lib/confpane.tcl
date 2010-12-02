@@ -509,7 +509,7 @@ proc confpane_setdatum {canv name datum valsetcb value} {
 
 
 
-proc confpane_invoke_exec {canv doinvoke} {
+proc confpane_invoke_exec {canv doinvoke dummy} {
     if {$doinvoke} {
         global confpaneInfo
         if {[info exists confpaneInfo(EXECBTN-$canv)]} {
@@ -530,17 +530,35 @@ proc confpane_execute {canv name} {
 }
 
 
+proc confpane_fontmenu_populate {w cmd var} {
+    if {[$w index end] == "none"} {
+        foreach fam [font_families] {
+            $w add radiobutton -label $fam -font [list $fam 12] -value $fam -variable $var -command $cmd
+        }
+    }
+    $w add command -label "====================="
+    $w delete last
+}
+
+
+proc confpane_focus {fieldname} {
+    global confpaneInfo
+    set confpaneInfo(FOCUSFIELD) $fieldname
+}
+
+
 proc confpane_populate {} {
     global confpaneInfo
     if {![info exists confpaneInfo(POPAFTPID)]} {
-        set confpaneInfo(POPAFTPID) [after 100 confpane_populate_really]
+        set confpaneInfo(POPAFTPID) [after 50 confpane_populate_really]
+        catch {unset confpaneInfo(FOCUSFIELD)}
     }
 }
 
 
 proc confpane_populate_really {} {
     global confpaneInfo
-    unset confpaneInfo(POPAFTPID)
+    catch {unset confpaneInfo(POPAFTPID)}
 
     set win [mainwin_current]
     set canv [mainwin_get_canvas $win]
@@ -780,6 +798,11 @@ proc confpane_populate_really {} {
         }
     }
 
+    set focfield ""
+    if {[info exists confpaneInfo(FOCUSFIELD)]} {
+        set focfield $confpaneInfo(FOCUSFIELD)
+    }
+
     foreach {cnf panefilt} [list $icnf "INFO" $scnf "STROKE" $ccnf "CAM"] {
         set make_widgets 0
         upvar #0 confpaneInfo(PREVFIELDS-$panefilt) prevfields
@@ -822,6 +845,7 @@ proc confpane_populate_really {} {
             set data(islength) 0
             set data(default) ""
             set data(persist) 0
+            set data(live) 0
             array set data $field
 
             if {$data(datum) == "---"} {
@@ -858,6 +882,9 @@ proc confpane_populate_really {} {
                         set confpaneInfo(EXECBTN-$canv) $btn
                         set reqh [winfo reqheight $btn]
                     }
+                    if {$name == $focfield} {
+                        focus $fr.cmd
+                    }
                 }
                 BOOLEAN -
                 BOOL {
@@ -874,6 +901,9 @@ proc confpane_populate_really {} {
 
                         set reqh [winfo reqheight $cb]
                     }
+                    if {$name == $focfield} {
+                        focus $fr.data
+                    }
                 }
                 LABEL {
                     set datvar confpaneInfo(STR-$canv-$name)
@@ -885,6 +915,7 @@ proc confpane_populate_really {} {
                         grid columnconfigure $fr 0 -minsize 75
                         grid $titlelbl -column 0 -row 0 -sticky e
                         grid $datlbl -column 1 -row 0 -sticky w
+
                         set reqh [winfo reqheight $datlbl]
                     }
                 }
@@ -895,8 +926,12 @@ proc confpane_populate_really {} {
 
                     if {$make_widgets} {
                         set titlelbl [label $fr.title -font TkSmallCaptionFont -text $data(title)]
+                        set validateon focusout
+                        if {$data(live)} {
+                            set validateon all
+                        }
                         set ent [entry $fr.data -width $data(width) \
-                                      -textvariable $entvar -validate focusout \
+                                      -textvariable $entvar -validate $validateon \
                                       -font TkSmallCaptionFont \
                                       -validatecommand [list confpane_validate_str $canv $data(name) $data(datum) $data(valsetcb) $data(validatecb) %P] \
                                       -invalidcommand [list confpane_invalidcmd $canv $data(name) $data(datum) $data(valgetcb) $data(default) $entvar]]
@@ -905,10 +940,14 @@ proc confpane_populate_really {} {
                         grid $ent -column 1 -row 0 -sticky w
 
                         bind $ent <Key-Escape>   "focus $canv"
-                        bind $ent <Key-Return>   "confpane_invoke_exec $canv $data(invoke)"
-                        bind $ent <Key-KP_Enter> "confpane_invoke_exec $canv $data(invoke)"
+                        bind $ent <Key-Return>   "confpane_invoke_exec $canv $data(invoke) A"
+                        bind $ent <Key-KP_Enter> "confpane_invoke_exec $canv $data(invoke) B"
 
                         set reqh [winfo reqheight $ent]
+                    }
+                    if {$name == $focfield} {
+                        $fr.data selection range 0 end
+                        focus $fr.data
                     }
                 }
                 INTEGER -
@@ -931,14 +970,18 @@ proc confpane_populate_really {} {
                                       -command [list confpane_incdatum $canv $data(name) $data(datum) $data(min) $data(max) $data(valsetcb) 0 "%d" $fr.data %d]]
 
                         bind $spin <Key-Escape>   "focus $canv"
-                        bind $spin <Key-Return>   "confpane_invoke_exec $canv $data(invoke)"
-                        bind $spin <Key-KP_Enter> "confpane_invoke_exec $canv $data(invoke)"
+                        bind $spin <Key-Return>   "confpane_invoke_exec $canv $data(invoke) C"
+                        bind $spin <Key-KP_Enter> "confpane_invoke_exec $canv $data(invoke) D"
 
                         grid columnconfigure $fr 0 -minsize 75
                         grid $titlelbl -column 0 -row 0 -sticky e
                         grid $spin -column 1 -row 0 -sticky w
 
                         set reqh [winfo reqheight $spin]
+                    }
+                    if {$name == $focfield} {
+                        $fr.data selection range 0 end
+                        focus $fr.data
                     }
                 }
                 DOUBLE -
@@ -977,14 +1020,18 @@ proc confpane_populate_really {} {
                                       -command [list confpane_incdatum $canv $data(name) $data(datum) $data(min) $data(max) $data(valsetcb) $data(islength) $escfmt $fr.data %d]]
 
                         bind $spin <Key-Escape>   "focus $canv"
-                        bind $spin <Key-Return>   "confpane_invoke_exec $canv $data(invoke)"
-                        bind $spin <Key-KP_Enter> "confpane_invoke_exec $canv $data(invoke)"
+                        bind $spin <Key-Return>   "confpane_invoke_exec $canv $data(invoke) E"
+                        bind $spin <Key-KP_Enter> "confpane_invoke_exec $canv $data(invoke) F"
 
                         grid columnconfigure $fr 0 -minsize 75
                         grid $titlelbl -column 0 -row 0 -sticky e
                         grid $spin -column 1 -row 0 -sticky w
 
                         set reqh [winfo reqheight $spin]
+                    }
+                    if {$name == $focfield} {
+                        $fr.data selection range 0 end
+                        focus $fr.data
                     }
                 }
                 COLOR {
@@ -1001,6 +1048,9 @@ proc confpane_populate_really {} {
                         grid $clrbtn   -column 2 -row 0 -sticky w
                         
                         set reqh [winfo reqheight $colorbox]
+                    }
+                    if {$name == $focfield} {
+                        focus $fr.clrbtn
                     }
                     if {$datval == ""} {
                         $fr.colorbox configure -background #dfdfdf -foreground black -text "Multiple"
@@ -1069,6 +1119,10 @@ proc confpane_populate_really {} {
 
                         set reqh [winfo reqheight $xspin]
                     }
+                    if {$name == $focfield} {
+                        $fr.datax selection range 0 end
+                        focus $fr.datax
+                    }
                 }
                 COMBOBOX -
                 COMBO {
@@ -1090,10 +1144,14 @@ proc confpane_populate_really {} {
 
                         bind $cmb <<ComboboxSelected>> "confpane_validate_combobox $cmb"
                         bind $cmb <Key-Escape>   "focus $canv"
-                        bind $cmb <Key-Return>   "confpane_validate_combobox $cmb ; confpane_invoke_exec $canv $data(invoke)"
-                        bind $cmb <Key-KP_Enter> "confpane_validate_combobox $cmb ; confpane_invoke_exec $canv $data(invoke)"
+                        bind $cmb <Key-Return>   "confpane_validate_combobox $cmb ; confpane_invoke_exec $canv $data(invoke) G"
+                        bind $cmb <Key-KP_Enter> "confpane_validate_combobox $cmb ; confpane_invoke_exec $canv $data(invoke) H"
 
                         set reqh [winfo reqheight $cmb]
+                    }
+                    if {$name == $focfield} {
+                        $fr.data selection range 0 end
+                        focus $fr.data
                     }
                 }
                 OPTIONS {
@@ -1132,10 +1190,12 @@ proc confpane_populate_really {} {
                         }
                         set reqh [winfo reqheight $mb]
                     }
+                    if {$name == $focfield} {
+                        focus $fr.data
+                    }
                 }
                 FONT {
                     set fmt "%.0f"
-                    set fams [font_families]
 
                     set famvar confpaneInfo(FONTMB-$canv-$name)
                     set sizvar confpaneInfo(SIZESP-$canv-$name)
@@ -1145,7 +1205,7 @@ proc confpane_populate_really {} {
                     if {$datval == ""} {
                         set ffam ""
                         set fsiz ""
-                        set $famvar ""
+                        set $famvar "-Multiple-"
                         set $sizvar ""
                         set $boldvar ""
                         set $italvar ""
@@ -1160,12 +1220,9 @@ proc confpane_populate_really {} {
 
                     if {$make_widgets} {
                         set titlelbl [label $fr.title -font TkSmallCaptionFont -text $data(title)]
-                        set fammb  [menubutton $fr.datafam -textvariable $famvar -font TkSmallCaptionFont -justify left -direction flush -menu $fr.datafam.mn -width 20]
-                        set fammn  [menu $fr.datafam.mn -tearoff 0]
-                        foreach fam $fams {
-                            set cmd [list confpane_setfontdatum $canv $data(name) $data(datum) $data(valsetcb) $fr]
-                            $fammn add radiobutton -label $fam -font [list $fam 12] -value $fam -variable $famvar -command $cmd
-                        }
+                        set fammb  [menubutton $fr.datafam -textvariable $famvar -font TkSmallCaptionFont -justify left -direction flush -menu $fr.datafam.mn -width 30]
+                        set cmd [list confpane_setfontdatum $canv $data(name) $data(datum) $data(valsetcb) $fr]
+                        set fammn  [menu $fr.datafam.mn -tearoff 0 -postcommand [list confpane_fontmenu_populate $fr.datafam.mn $cmd $famvar]]
 
                         set sizlbl [label $fr.sizlbl -font TkSmallCaptionFont -text "Size (pts)"]
                         set afr [frame $fr.afr]
@@ -1189,8 +1246,8 @@ proc confpane_populate_really {} {
                         bind $fammb <Key-Escape>   "focus $canv"
                         bind $sizcmb <<ComboboxSelected>> "confpane_validate_combobox $sizcmb"
                         bind $sizcmb <Key-Escape>   "focus $canv"
-                        bind $sizcmb <Key-Return>   "confpane_validate_combobox $sizcmb ; confpane_invoke_exec $canv $data(invoke)"
-                        bind $sizcmb <Key-KP_Enter> "confpane_validate_combobox $sizcmb ; confpane_invoke_exec $canv $data(invoke)"
+                        bind $sizcmb <Key-Return>   "confpane_validate_combobox $sizcmb ; confpane_invoke_exec $canv $data(invoke) I"
+                        bind $sizcmb <Key-KP_Enter> "confpane_validate_combobox $sizcmb ; confpane_invoke_exec $canv $data(invoke) J"
                         bind $italcb <Key-Escape>   "focus $canv"
                         bind $boldcb <Key-Escape>   "focus $canv"
 
@@ -1207,6 +1264,9 @@ proc confpane_populate_really {} {
                         set  reqh [winfo reqheight $fammb]
                         incr reqh [winfo reqheight $sizcmb]
                         set rowscnt 2
+                    }
+                    if {$name == $focfield} {
+                        focus $fr.datafam
                     }
                 }
                 default {

@@ -86,6 +86,7 @@ proc plugin_text_editfields {canv objid coords} {
         name TEXT
         title "Text"
         width 30
+        live 1
     }
     lappend out {
         type POINT
@@ -121,160 +122,8 @@ proc plugin_text_editfields {canv objid coords} {
 
 
 proc plugin_text_usereditobj {canv objid coords} {
-    global plugin_textInfo
-
-    set parent [winfo toplevel $canv]
-    set base "$parent.editobj_text"
-    set i 1
-    while {[winfo exists $base$i]} {
-        incr i
-    }
-    append base $i
-    toplevel $base -padx 10 -pady 10
-    wm title $base "Text Object Editor - tkCAD"
-    wm transient $base $parent
-
-    listbox $base.ffam -width 30 -height 5 -highlightthickness 3 \
-        -exportselection 0 -borderwidth 1 -relief sunken \
-        -yscrollcommand "$base.ffamsb set" -selectmode single
-    scrollbar $base.ffamsb -orient vertical \
-        -command "$base.ffam yview"
-    spinbox $base.fsizee -width 4 -exportselection 0 \
-        -from 0.1 -to 1024.0 -increment 1.0 -format "%.1f" \
-        -command "after idle plugin_text_useredit_change $base"
-    listbox $base.fsize -width 4 -height 5 -highlightthickness 3 \
-        -exportselection 0 -borderwidth 1 -relief sunken \
-        -yscrollcommand "$base.fsizesb set" -selectmode single
-    scrollbar $base.fsizesb -orient vertical \
-        -command "$base.fsize yview"
-    checkbutton $base.fbold -text "Bold" \
-        -variable plugin_textInfo(BOLD) \
-        -command "plugin_text_useredit_change $base"
-    checkbutton $base.fital -text "Italics" \
-        -variable plugin_textInfo(ITAL) \
-        -command "plugin_text_useredit_change $base"
-    text $base.txt -width 20 -height 5 \
-        -relief sunken -borderwidth 1 -highlightthickness 3
-    button $base.commit -text "Save" -width 6 -command "plugin_text_useredit_commit $base $canv $objid"
-    button $base.cancel -text "Cancel" -width 6 -command "destroy $base"
-
-    grid $base.ffam   $base.ffamsb $base.fsizee -             $base.fbold
-    grid ^            ^            $base.fsize  $base.fsizesb $base.fital
-    grid $base.txt    -            -            -             -
-    grid $base.commit -            -            -             $base.cancel
-
-    grid $base.ffam    -padx 0      -pady 0  -sticky nsew
-    grid $base.ffamsb  -padx 0      -pady 0  -sticky nsw
-    grid $base.fsizee  -padx {11 4} -pady 0  -sticky nsew
-    grid $base.fsize   -padx {10 0} -pady 0  -sticky nsew
-    grid $base.fsizesb -padx 0      -pady 0  -sticky nsw
-    grid $base.fbold   -padx {10 0} -pady 0  -sticky nw
-    grid $base.fital   -padx {10 0} -pady 10 -sticky nw
-    grid $base.txt     -padx 0      -pady 10 -sticky nsew
-    grid $base.commit  -padx 10     -pady 0  -sticky ne
-    grid $base.cancel  -padx 0      -pady 0  -sticky ne
-
-    grid columnconfigure $base 4 -weight 1 -minsize 20
-    grid rowconfigure    $base 2 -weight 1 -minsize 20
-
-    set sizes {6 7 8 9 10 11 12 14 16 18 20 24 28 36 48 72 144 288}
-    set fams [font_families]
-
-    set txtval [cadobjects_object_getdatum $canv $objid "TEXT"]
-    set font [cadobjects_object_getdatum $canv $objid "FONT"]
-    set defaultfam [lindex $font 0]
-    set defaultsize [lindex $font 1]
-
-    if {"bold" in $font} {
-        set plugin_textInfo(BOLD) 1
-    } else {
-        set plugin_textInfo(BOLD) 0
-    }
-    if {"italic" in $font} {
-        set plugin_textInfo(ITAL) 1
-    } else {
-        set plugin_textInfo(ITAL) 0
-    }
-
-    $base.txt delete 1.0 end
-    $base.txt insert end $txtval
-    $base.txt tag add FONTSTYLE 1.0 end
-    $base.txt tag configure FONTSTYLE -font $font
-
-    set fmt [$base.fsizee cget -format]
-    $base.fsizee delete 0 end
-    $base.fsizee insert end [format $fmt $defaultsize]
-
-    $base.fsize delete 0 end
-    foreach siz $sizes {
-        $base.fsize insert end $siz
-    }
-
-    set defpos [lsearch -exact $sizes $defaultsize]
-    $base.fsize selection clear 0 end
-    $base.fsize selection set $defpos
-    $base.fsize see $defpos
-
-    $base.ffam delete 0 end
-    foreach fam $fams {
-        $base.ffam insert end $fam
-    }
-
-    set defpos [lsearch -exact $fams $defaultfam]
-    $base.ffam selection clear 0 end
-    $base.ffam selection set $defpos
-    $base.ffam see $defpos
-
-    bind $base.ffam <<ListboxSelect>> "plugin_text_useredit_change $base"
-    bind $base.fsize <<ListboxSelect>> "plugin_text_useredit_sizelb_change $base"
-    bind $base.txt <Key> "+after idle plugin_text_useredit_fixtxt $base"
-}
-
-
-proc plugin_text_useredit_fixtxt {base} {
-    if {[winfo exists $base.txt]} {
-        $base.txt tag add FONTSTYLE 1.0 end
-    }
-}
-
-
-proc plugin_text_useredit_commit {base canv objid} {
-    set txtval [$base.txt get 1.0 end-1c]
-    set font [$base.txt tag cget FONTSTYLE -font]
-    cadobjects_object_setdatum $canv $objid "TEXT" $txtval
-    cadobjects_object_setdatum $canv $objid "FONT" $font
-    cadobjects_object_recalculate $canv $objid
-    cadobjects_object_draw $canv $objid
     confpane_populate
-    tool_set_current 1
-    destroy $base
-}
-
-
-proc plugin_text_useredit_change {base} {
-    set pos [$base.ffam curselection]
-    set fam [$base.ffam get $pos]
-    set siz [expr {int([$base.fsizee get]+0.5)}]
-    set font [list $fam $siz]
-    global plugin_textInfo
-    if {$plugin_textInfo(BOLD)} {
-        lappend font "bold"
-    }
-    if {$plugin_textInfo(ITAL)} {
-        lappend font "italic"
-    }
-    $base.txt tag add FONTSTYLE 1.0 end
-    $base.txt tag configure FONTSTYLE -font $font
-}
-
-
-proc plugin_text_useredit_sizelb_change {base} {
-    set pos [$base.fsize curselection]
-    set val [$base.fsize get $pos]
-    set fmt [$base.fsizee cget -format]
-    $base.fsizee delete 0 end
-    $base.fsizee insert end [format $fmt $val]
-    plugin_text_useredit_change $base
+    confpane_focus TEXT
 }
 
 
@@ -511,6 +360,7 @@ proc plugin_textarc_editfields {canv objid coords} {
         name TEXT
         title "Text"
         width 30
+        live 1
     }
     lappend out {
         type POINT
@@ -624,6 +474,12 @@ proc plugin_textarc_setfield {canv objid coords field val} {
             cadobjects_object_set_coords $canv $objid $coords
         }
     }
+}
+
+
+proc plugin_textarc_usereditobj {canv objid coords} {
+    confpane_populate
+    confpane_focus TEXT
 }
 
 

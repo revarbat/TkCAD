@@ -2729,8 +2729,9 @@ proc cadobjects_object_drawobj_from_decomposition {canv objid tags color fill wi
             ROTTEXT {
                 foreach {cx cy txt font just rot} $data break
                 foreach {cx cy} [cadobjects_scale_coords $canv [list $cx $cy]] break
-                set ffam [lindex $font 0]
-                set fsiz [lindex $font 1]
+                array set fontinfo [font actual $font]
+                set ffam $fontinfo(-family)
+                set fsiz $fontinfo(-size)
                 set scalefact [cadobjects_get_scale_factor $canv]
                 if {[namespace exists ::tkp]} {
                     set fsiz [expr {$fsiz*$scalefact*2.153}]
@@ -3441,6 +3442,7 @@ proc cadobjects_binding_buttonpress {canv type x y} {
                 set cadobjectsInfo($canv-CLICK_OBJ)  $objid
                 set cadobjectsInfo($canv-CLICK_NODE) ""
                 cadobjects_objcall "clickobj" $canv $objid $realx $realy
+                confpane_populate
             } else {
                 tool_set_state "SELOBJ_RECT_MOUSEDOWN"
                 if {![cadobjects_modkey_isdown SHIFT]} {

@@ -15,7 +15,7 @@ proc main {} {
     global tkcad_plugin_root
     global tkcad_prefs_dir
 
-    set tkcad_version 0.215
+    set tkcad_version 0.220
     set tcl_precision 16
 
     if {[catch {tk windowingsystem} winsys]} {
@@ -57,6 +57,7 @@ proc main {} {
         enhimgcpy
         mlcnc_critcl
         fontdata
+        tkpath
     } {
         #Hall of shame of crashing extensions:
         #    tkpath
@@ -202,6 +203,15 @@ proc main {} {
         }
     }
 
+    # Pre-render font names for font menu.
+    set fams [font_families]
+    text .foo -width 40 -height 1
+    foreach fam $fams {
+        .foo tag config $fam -font [list $fam 10]
+        .foo insert 0.0 "$fam\n" $fam
+    }
+    destroy .foo
+
     prefs:init
     trace add variable [/prefs:getvar antialiasing] write "tkcad_update_antialiasing"
     prefs:load
@@ -219,6 +229,7 @@ proc tkcad_update_antialiasing {args} {
         set ::tkp::antialias [/prefs:get antialiasing]
     }
 }
+
 
 
 rename exit tkcad_exit

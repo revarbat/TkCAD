@@ -1,18 +1,34 @@
 proc font_families {} {
-    set fams [cncfont_list]
-    foreach famname [lsort [font families]] {
+    global utilsInfo
+    if {[info exists utilsInfo(FONT_FAMILIES)]} {
+        return $utilsInfo(FONT_FAMILIES)
+    }
+    set bannedfams {system ansi device systemfixed ansifixed oemfixed system application menu}
+    foreach famname [font families] {
         if {[string is ascii -strict $famname]} {
             if {[string is alpha -strict [string index $famname 0]]} {
                 set famsub $famname
-                regsub -all -nocase "  *Bold" $famsub "" famsub
-                regsub -all -nocase "  *Italic" $famsub "" famsub
-                regsub -all -nocase "  *Ital" $famsub "" famsub
-                if {$famsub ni $fams} {
-                    lappend fams $famname
+                regsub -all -nocase { *[ -]Bold}   $famsub "" famsub
+                regsub -all -nocase { *[ -]Italic} $famsub "" famsub
+                regsub -all -nocase { *[ -]Ital}   $famsub "" famsub
+                if {![info exists famtree($famsub)]} {
+                    set famtree($famsub) $famname
+                }
+                if {[string length $famname] < [string length $famtree($famsub)]} {
+                    set famtree($famsub) $famname
                 }
             }
         }
     }
+    set fams {}
+    foreach {famsub famname} [array get famtree] {
+        if {$famsub ni $bannedfams} {
+            lappend fams $famname
+        }
+    }
+    set fams [lsort $fams]
+    set fams [linsert $fams 0 {*}[cncfont_list]]
+    set utilsInfo(FONT_FAMILIES) $fams
     return $fams
 }
 
