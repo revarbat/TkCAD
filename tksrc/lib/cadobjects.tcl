@@ -2729,6 +2729,7 @@ proc cadobjects_object_drawobj_from_decomposition {canv objid tags color fill wi
             ROTTEXT {
                 foreach {cx cy txt font just rot} $data break
                 foreach {cx cy} [cadobjects_scale_coords $canv [list $cx $cy]] break
+                lset font 1 [expr {int(0.5+[lindex $font 1])}]
                 array set fontinfo [font actual $font]
                 set ffam $fontinfo(-family)
                 set fsiz $fontinfo(-size)

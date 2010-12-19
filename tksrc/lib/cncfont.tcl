@@ -234,6 +234,8 @@ proc cncfont_measure {font msg thick {spacing 1.0}} {
     lassign $font fontname size
 
     if {![cncfont_exists $fontname]} {
+	set size [expr {int($size+0.5)}]
+	lset font 1 $size
 	set xwid [font measure $font $msg]
         set sc [expr {(100.0/72.0)/72.0}]
 	return [expr {$xwid*$sc}]
