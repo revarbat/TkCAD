@@ -1223,6 +1223,19 @@ proc plugin_hexnut_scaleobj {canv objid coords sx sy cx cy} {
 }
 
 
+proc plugin_hexnut_rotateobj {canv objid coords rotang cx cy} {
+    set ang [cadobjects_object_getdatum $canv $objid "ANGLE"]
+    set ang [expr {fmod($ang+$rotang,360.0)}]
+    if {$ang > 180.0} {
+        set ang [expr {$ang-360.0}]
+    } elseif {$ang < -180.0} {
+        set ang [expr {$ang+360.0}]
+    }
+    cadobjects_object_setdatum $canv $objid "ANGLE" $ang
+    return 0 ;# Also allow default coordlist rotation
+}
+
+
 proc plugin_hexnut_drawobj {canv objid coords tags color fill width dash} {
     constants degtorad
     set size [cadobjects_object_getdatum $canv $objid "SIZE"]
