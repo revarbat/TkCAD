@@ -1,7 +1,9 @@
 tkCAD 0.220
 Removed silly Text editing dialog.
 Added way for tools to shift focus on a confpane item.
+Added wrap by tangent transform tool.
 Fixed some text rendering issues.
+Fixed SVG export to export line width and layer colors.
 Changed confpane Font Family dialog to be faster to use.
 Changed font family dropdowns to have fewer redundant font names.
 Changed TEXT and TEXTARC tools to update live as you change their text.

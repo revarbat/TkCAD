@@ -2428,9 +2428,9 @@ proc cadobjects_object_draw {canv objid {color ""}} {
 
     set width [cadobjects_object_stroke_width $canv $objid]
     set width [expr {$dpi*$width*$scalefactor}]
-    #if {$width < 0.5} {
-    #    set width 0.5
-    #}
+    if {$width < 0.5} {
+        set width 0.5
+    }
 
     set dash {}
     if {$objdash != ""} {

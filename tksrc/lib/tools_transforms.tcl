@@ -855,6 +855,177 @@ proc plugin_wrap_execute {canv coords isconf} {
 
 
 
+proc plugin_wraptan_preview {canv coords isconf} {
+    constants pi degtorad
+
+    if {[llength $coords] < 4} {
+        return
+    }
+
+    $canv delete Preview
+    set path [cadobjects_scale_coords $canv [lrange $coords 0 3]]
+    $canv create line $path -smooth raw -fill "#7f7fff" -tags Preview
+
+    if {[llength $coords] < 6} {
+        return
+    }
+
+    set sels [$canv bbox Selected]
+    if {[llength $sels] == 0} {
+        return
+    }
+    foreach {ox0 oy0 ox1 oy1} [cadobjects_descale_coords $canv $sels] break
+
+    foreach {cpx1 cpy1 cpx2 cpy2 cpx3 cpy3} $coords break
+    set mx1 $cpx1
+    set my1 $cpy1
+    set mx2 [expr {($cpx1+$cpx3)/2.0}]
+    set my2 [expr {($cpy1+$cpy3)/2.0}]
+    set pang1 [expr {atan2($cpy2-$cpy1,$cpx2-$cpx1)+$pi/2.0}]
+    set pang2 [expr {atan2($cpy3-$cpy1,$cpx3-$cpx1)+$pi/2.0}]
+    if {$pang1 > $pi} {
+        set pang1 [expr {$pang1-$pi}]
+    }
+    if {$pang2 > $pi} {
+        set pang2 [expr {$pang2-$pi}]
+    }
+    set col [expr {$cpx1*($cpy2-$cpy3)+$cpx2*($cpy3-$cpy1)+$cpx3*($cpy1-$cpy2)}]
+    if {abs($col) < 1e-6} {
+        # Points are colinear.  Don't wrap.
+        return
+    }
+    if {abs(abs($pang1)-$pi/2.0) < 1e-6} {
+        # Segment1 is vertical.  We know Segment2 is not colinear.
+        set m2 [expr {tan($pang2)}]
+        set c2 [expr {$my2-$m2*$mx2}]
+        set cx $mx1
+        set cy [expr {$m2*$cx+$c2}]
+    } elseif {abs(abs($pang2)-$pi/2.0) < 1e-6} {
+        # Segment2 is vertical.  We know Segment1 is not colinear.
+        set m1 [expr {tan($pang1)}]
+        set c1 [expr {$my1-$m1*$mx1}]
+        set cx $mx2
+        set cy [expr {$m1*$cx+$c1}]
+    } else {
+        set m1 [expr {tan($pang1)}]
+        set m2 [expr {tan($pang2)}]
+        set c1 [expr {$my1-$m1*$mx1}]
+        set c2 [expr {$my2-$m2*$mx2}]
+        set cx [expr {($c2-$c1)/($m1-$m2)}]
+        set cy [expr {$m1*$cx+$c1}]
+    }
+    set rad [expr {hypot($cpy1-$cy,$cpx1-$cx)}]
+    if {$rad > 180} {
+        # Points are colinear.  Don't wrap.
+        return
+    }
+
+    set sang [expr {atan2($cpy1-$cy,$cpx1-$cx)}]
+    set eang [expr {atan2($cpy2-$cy,$cpx2-$cx)}]
+    if {$sang < 0} {
+        set sang [expr {$sang+2.0*$pi}]
+    }
+    while {$eang < $sang} {
+        set eang [expr {$eang+2.0*$pi}]
+    }
+    set lang [expr {-atan2($cpy2-$cpy1,$cpx2-$cpx1)}]
+    set ldst [expr {hypot($cpy2-$cpy1,$cpx2-$cpx1)}]
+
+    set dx [expr {$cx-$cpx1}]
+    set dy [expr {$cy-$cpy1}]
+    set ptx [expr {$dx*cos($lang)-$dy*sin($lang)}]
+    set pty [expr {$dx*sin($lang)+$dy*cos($lang)}]
+
+    if {$pty < 0.0} {
+        set eang [expr {$eang-2.0*$pi}]
+    }
+    set dang [expr {$eang-$sang}]
+
+    foreach {x0 y0 x1 y1} [list \
+        $ox0 $oy0 $ox0 $oy1 \
+        $ox0 $oy1 $ox1 $oy1 \
+        $ox1 $oy1 $ox1 $oy0 \
+        $ox1 $oy0 $ox0 $oy0 \
+        $ox0 $oy0 $ox1 $oy1 \
+        $ox0 $oy1 $ox1 $oy0 \
+        $cpx1 $cpy1 $cpx2 $cpy2 \
+    ] {
+        set path [list $x0 $y0 $x1 $y1]
+        set path [bezutil_bezier_from_line $path]
+        set path [bezutil_bezier_split_long_segments $path [expr {5.0*$degtorad*$rad}]]
+        set nupath {}
+        foreach {x y} $path {
+            set dx [expr {$x-$cpx1}]
+            set dy [expr {$y-$cpy1}]
+            set tx [expr {$dx*cos($lang)-$dy*sin($lang)}]
+            set ty [expr {$dx*sin($lang)+$dy*cos($lang)}]
+            set nurad [expr {$rad-sign($dang)*$ty}]
+            set nuang [expr {$sang+sign($dang)*$tx/$rad}]
+            set x [expr {$nurad*cos($nuang)+$cx}]
+            set y [expr {$nurad*sin($nuang)+$cy}]
+            lappend nupath $x $y
+        }
+        set path [cadobjects_scale_coords $canv $nupath]
+        $canv create line $path -smooth raw -fill "#7f7fff" -tags Preview
+    }
+}
+
+
+proc plugin_wraptan_execute {canv coords isconf} {
+    constants pi degtorad
+
+    $canv delete Preview
+    foreach {cpx1 cpy1 cpx2 cpy2 cpx3 cpy3} $coords break
+    set mx1 $cpx1
+    set my1 $cpy1
+    set mx2 [expr {($cpx1+$cpx3)/2.0}]
+    set my2 [expr {($cpy1+$cpy3)/2.0}]
+    set pang1 [expr {atan2($cpy2-$cpy1,$cpx2-$cpx1)+$pi/2.0}]
+    set pang2 [expr {atan2($cpy3-$cpy1,$cpx3-$cpx1)+$pi/2.0}]
+    if {$pang1 > $pi} {
+        set pang1 [expr {$pang1-$pi}]
+    }
+    if {$pang2 > $pi} {
+        set pang2 [expr {$pang2-$pi}]
+    }
+    set col [expr {$cpx1*($cpy2-$cpy3)+$cpx2*($cpy3-$cpy1)+$cpx3*($cpy1-$cpy2)}]
+    if {abs($col) < 1e-6} {
+        # Points are colinear.  Don't wrap.
+        return
+    }
+    if {abs(abs($pang1)-$pi/2.0) < 1e-6} {
+        # Segment1 is vertical.  We know Segment2 is not colinear.
+        set m2 [expr {tan($pang2)}]
+        set c2 [expr {$my2-$m2*$mx2}]
+        set cx $mx1
+        set cy [expr {$m2*$cx+$c2}]
+    } elseif {abs(abs($pang2)-$pi/2.0) < 1e-6} {
+        # Segment2 is vertical.  We know Segment1 is not colinear.
+        set m1 [expr {tan($pang1)}]
+        set c1 [expr {$my1-$m1*$mx1}]
+        set cx $mx2
+        set cy [expr {$m1*$cx+$c1}]
+    } else {
+        set m1 [expr {tan($pang1)}]
+        set m2 [expr {tan($pang2)}]
+        set c1 [expr {$my1-$m1*$mx1}]
+        set c2 [expr {$my2-$m2*$mx2}]
+        set cx [expr {($c2-$c1)/($m1-$m2)}]
+        set cy [expr {$m1*$cx+$c1}]
+    }
+    set rad [expr {hypot($cpy1-$cy,$cpx1-$cx)}]
+    if {$rad > 180} {
+        # Points are colinear.  Don't wrap.
+        return
+    }
+    cadobjects_object_wrap $canv [cadselect_list $canv] $cx $cy $cpx1 $cpy1 $cpx2 $cpy2
+}
+
+
+
+
+
+
 proc plugin_unwrap_preview {canv coords isconf} {
     constants pi degtorad radtodeg
 
@@ -972,11 +1143,16 @@ proc plugin_transforms_register {} {
         {2    "Second Endpoint"}
         {3    "Control Point"}
     } -icon "tool-bend"
-    tool_register_ex WRAP "&Transforms" "&Wrap" {
+    tool_register_ex WRAP "&Transforms" "&Wrap around Center" {
         {1    "Center Point"}
         {2    "Reference Point"}
         {3    "Tangent Point"}
     } -icon "tool-wrap"
+    tool_register_ex WRAPTAN "&Transforms" "Wrap by Ta&ngent" {
+        {1    "Starting Point"}
+        {2    "Tangent Line Point"}
+        {3    "Ending Point"}
+    } -icon "tool-wraptan"
     tool_register_ex UNWRAP "&Transforms" "&Un-wrap" {
         {1    "Center Point"}
         {2    "Reference Point"}

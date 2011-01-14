@@ -185,7 +185,7 @@ proc svg_decode_stroke {canv objid var} {
     }
     set lcolor [svg_decode_color $lcolor]
     set lwidth [svg_decode_length $lwidth]
-    set ldash [svg_decode_dash $ldash]
+    set ldash  [svg_decode_dash $ldash]
     set fcolor [svg_decode_color $fcolor]
 
     # Presumably, these are new objects anyways.
@@ -388,6 +388,9 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
         set lcolor [cadobjects_object_getdatum $canv $objid "LINECOLOR"]
         set lwidth [cadobjects_object_getdatum $canv $objid "LINEWIDTH"]
         set ldash  [cadobjects_object_getdatum $canv $objid "LINEDASH" ]
+        if {$fcolor == ""} { set fcolor "none" }
+        if {$lcolor == "none"} { set lcolor "" }
+        if {$ldash == "none"}  { set ldash "" }
         foreach {dectype data} [cadobjects_object_decompose $canv $objid $allowed] {
             switch -exact -- $dectype {
                 ELLIPSE {
@@ -406,7 +409,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                         cy [svg_vpos $cy] \
                         rx [svg_len $rad1] \
                         ry [svg_len $rad2] \
-                        fill $fcolor stroke $lcolor
+                        fill $fcolor stroke $lcolor stroke-width "${lwidth}in"
                 }
                 ELLIPSEROT {
                     foreach {cx cy rad1 rad2 rot} $data break
@@ -425,7 +428,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                             cy [svg_vpos $cy] \
                             rx [svg_len $rad1] \
                             ry [svg_len $rad2] \
-                            fill $fcolor stroke $lcolor
+                            fill $fcolor stroke $lcolor stroke-width "${lwidth}in"
                     } else {
                         xmlutil_write_element $f "ellipse" \
                             transform "rotate($rot [svg_coord $cx $cy])" \
@@ -433,7 +436,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                             cy [svg_vpos $cy] \
                             rx [svg_len $rad1] \
                             ry [svg_len $rad2] \
-                            fill $fcolor stroke $lcolor
+                            fill $fcolor stroke $lcolor stroke-width "${lwidth}in"
                     }
                 }
                 CIRCLE {
@@ -449,7 +452,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                         cx [svg_hpos $cx] \
                         cy [svg_vpos $cy] \
                         r [svg_len $rad1] \
-                        fill $fcolor stroke $lcolor
+                        fill $fcolor stroke $lcolor stroke-width "${lwidth}in"
                 }
                 RECTANGLE {
                     foreach {x0 y0 x1 y1} $data break
@@ -477,7 +480,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                         y [svg_vpos $y0] \
                         width [svg_len $dx] \
                         height [svg_len $dy] \
-                        fill $fcolor stroke $lcolor
+                        fill $fcolor stroke $lcolor stroke-width "${lwidth}in"
                 }
                 ROTRECT {
                     foreach {cx cy hdx hdy rot} $data break
@@ -502,7 +505,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                         y [svg_vpos -$hdy] \
                         width [svg_len $dx] \
                         height [svg_len $dy] \
-                        fill $fcolor stroke $lcolor
+                        fill $fcolor stroke $lcolor stroke-width "${lwidth}in"
                 }
                 ARC {
                     foreach {cx cy rad1 start extent} $data break
@@ -529,7 +532,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                     }
                     set path "M[svg_coord $x0 $y0] A[svg_len $rad1],[svg_len $rad1] 0.0 $long,$sweep [svg_coord $x $y]"
                     xmlutil_write_element $f "path" d $path \
-                        fill "none" stroke "black"
+                        fill $fcolor stroke $lcolor stroke-width "${lwidth}in"
                 }
                 ROTARC {
                     foreach {cx cy rad1 rad2 start extent rot} $data break
@@ -565,7 +568,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                     }
                     set path "M[svg_coord $spx $spy] A[svg_len $rad1],[svg_len $rad2] $rot $long,$sweep [svg_coord $epx $epy]"
                     xmlutil_write_element $f "path" d $path \
-                        fill "none" stroke "black"
+                        fill $fcolor stroke $lcolor stroke-width "${lwidth}in"
                 }
                 QUADBEZ {
                     foreach {x0 y0} [lrange $data 0 1] break
@@ -583,7 +586,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                         set fillcolor $fcolor
                     }
                     xmlutil_write_element $f "path" d $path \
-                        fill $fillcolor stroke $lcolor
+                        fill $fillcolor stroke $lcolor stroke-width "${lwidth}in"
                 }
                 BEZIER {
                     foreach {x0 y0} [lrange $data 0 1] break
@@ -603,7 +606,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                         set fillcolor $fcolor
                     }
                     xmlutil_write_element $f "path" d $path \
-                        fill $fillcolor stroke $lcolor
+                        fill $fillcolor stroke $lcolor stroke-width "${lwidth}in"
                 }
                 LINES {
                     set lineset [list $data]
@@ -636,7 +639,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                             set fillcolor $fcolor
                         }
                         xmlutil_write_element $f "path" d $path \
-                            fill $fillcolor stroke $lcolor
+                            fill $fillcolor stroke $lcolor stroke-width "${lwidth}in"
                     }
                 }
                 POINTS {
@@ -649,7 +652,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                         set py1 [expr {$y+2}]
                         set path "M$px0,$y L$px1,$y M$x,$py0 L$x,$py1"
                         xmlutil_write_element $f "path" d $path \
-                            fill "none" stroke "black"
+                            fill $fcolor stroke $lcolor stroke-width "${lwidth}in"
                     }
                 }
                 TEXT {
@@ -668,7 +671,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                     xmlutil_write_block_open $f "text" \
                         x [svg_hpos $cx] \
                         y [svg_vpos $cy] \
-                        fill "black" \
+                        fill $fcolor \
                         font-family $ffam \
                         font-size $fsiz \
                         text-anchor $anchor
@@ -700,7 +703,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                         transform "rotate($nrot [svg_coord $cx $cy])" \
                         x [svg_hpos $cx] \
                         y [svg_vpos $cy] \
-                        fill "black" \
+                        fill $fcolor \
                         font-family $ffam \
                         font-size $fsiz \
                         text-anchor $anchor
