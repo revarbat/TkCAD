@@ -1,3 +1,8 @@
+tkCAD 0.221
+Added Kerf adjustment dialog when exporting to SVG For Laser.
+
+
+
 tkCAD 0.220
 Removed silly Text editing dialog.
 Added way for tools to shift focus on a confpane item.

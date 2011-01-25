@@ -22,6 +22,7 @@ set tkcad_prefs_list {
   str   recent_files      ""   0     0 ""	-  "Files recently opened."
   bool  show_grid          1   0     1 ""       -  "Show Grid"
   bool  show_origin        1   0     1 ""       -  "Show Origin"
+  str   laser_kerf     0.007   0  0.05 ""       -  "Laser Kerf"
 }
 
 

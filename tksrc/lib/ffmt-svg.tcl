@@ -11,7 +11,30 @@ proc ffmt_plugin_open_svg {win canv filename} {
 
 
 proc ffmt_plugin_save_svglaser {win canv filename} {
-    return [ffmt_plugin_writefile_svg $win $canv $filename 0.004]
+    global ffmtSvgInfo
+    set ffmtSvgInfo(RESULT) 0
+    set ffmtSvgInfo(KERF) [/prefs:get laser_kerf]
+
+    set win [toplevel .laserwin -padx 20 -pady 20]
+    wm title $win "SVG for Laser Settings"
+    set kerflbl [label $win.kerflbl -text "Kerf"]
+    set kerfspin [spinbox $win.kerfspin -format "%0.4f" -from 0.0 -to 0.05 -increment 0.001 -width 8 -justify right -textvariable ffmtSvgInfo(KERF)]
+    set kerfunit [label $win.kerfunit -text "inches"]
+    set exportbtn [button $win.exportbtn -text "Export" -command "set ffmtSvgInfo(RESULT) 1; destroy $win" -default active]
+    set cancelbtn [button $win.cancelbtn -text "Cancel" -command "set ffmtSvgInfo(RESULT) 0; destroy $win"]
+
+    grid $kerflbl $kerfspin  $kerfunit -padx 5 -pady 5 -sticky nw
+    grid x        $exportbtn $cancelbtn -padx 5 -pady 5 -sticky nw
+    grid $kerfunit -padx 0
+
+    grab $win
+    tkwait window $win
+    if {$ffmtSvgInfo(RESULT) == 0} {
+        return
+    }
+    set kerf $ffmtSvgInfo(KERF)
+    /prefs:set laser_kerf $kerf
+    return [ffmt_plugin_writefile_svg $win $canv $filename [expr {$kerf/2.0}]]
 }
 
 
@@ -359,7 +382,7 @@ proc svg_bbox_expand {bbox coords} {
 }
 
 
-proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
+proc ffmt_plugin_writeobj_svg {win canv f objid halfkerf objcountvar {linepfx ""}} {
     constants pi
     set type   [cadobjects_object_gettype $canv $objid]
     set coords [cadobjects_object_get_coords $canv $objid]
@@ -371,14 +394,14 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
         if {[llength $children] > 0} {
             xmlutil_write_block_open $f "g"
             foreach child $children {
-                ffmt_plugin_writeobj_svg $win $canv $f $child $kerf objnum "  $linepfx"
+                ffmt_plugin_writeobj_svg $win $canv $f $child $halfkerf objnum "  $linepfx"
             }
             puts -nonewline $f $linepfx
             xmlutil_write_block_close $f "g"
         }
     } else {
         puts -nonewline $f $linepfx
-        if {$kerf} {
+        if {$halfkerf} {
             set allowed {ELLIPSE CIRCLE RECTANGLE ROTRECT ARC ROTARC LINES POINTS TEXT ROTTEXT LASER}
             set cutside [cadobjects_object_getdatum $canv $objid "CUTSIDE"]
         } else {
@@ -395,13 +418,13 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
             switch -exact -- $dectype {
                 ELLIPSE {
                     foreach {cx cy rad1 rad2} $data break
-                    if {$kerf} {
+                    if {$halfkerf} {
                         if {$cutside == "inside"} {
-                            set rad1 [expr {$rad1-$kerf}]
-                            set rad2 [expr {$rad2-$kerf}]
+                            set rad1 [expr {$rad1-$halfkerf}]
+                            set rad2 [expr {$rad2-$halfkerf}]
                         } elseif {$cutside == "outside"} {
-                            set rad1 [expr {$rad1+$kerf}]
-                            set rad2 [expr {$rad2+$kerf}]
+                            set rad1 [expr {$rad1+$halfkerf}]
+                            set rad2 [expr {$rad2+$halfkerf}]
                         }
                     }
                     xmlutil_write_element $f "ellipse" \
@@ -413,13 +436,13 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                 }
                 ELLIPSEROT {
                     foreach {cx cy rad1 rad2 rot} $data break
-                    if {$kerf} {
+                    if {$halfkerf} {
                         if {$cutside == "inside"} {
-                            set rad1 [expr {$rad1-$kerf}]
-                            set rad2 [expr {$rad2-$kerf}]
+                            set rad1 [expr {$rad1-$halfkerf}]
+                            set rad2 [expr {$rad2-$halfkerf}]
                         } elseif {$cutside == "outside"} {
-                            set rad1 [expr {$rad1+$kerf}]
-                            set rad2 [expr {$rad2+$kerf}]
+                            set rad1 [expr {$rad1+$halfkerf}]
+                            set rad2 [expr {$rad2+$halfkerf}]
                         }
                     }
                     if {abs($rot) < 1e-6} {
@@ -441,11 +464,11 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                 }
                 CIRCLE {
                     foreach {cx cy rad1} $data break
-                    if {$kerf} {
+                    if {$halfkerf} {
                         if {$cutside == "inside"} {
-                            set rad1 [expr {$rad1-$kerf}]
+                            set rad1 [expr {$rad1-$halfkerf}]
                         } elseif {$cutside == "outside"} {
-                            set rad1 [expr {$rad1+$kerf}]
+                            set rad1 [expr {$rad1+$halfkerf}]
                         }
                     }
                     xmlutil_write_element $f "circle" \
@@ -466,13 +489,13 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                         set dy [expr {-$dy}]
                         set y0 $y1
                     }
-                    if {$kerf} {
+                    if {$halfkerf} {
                         if {$cutside == "inside"} {
-                            set dx [expr {$dx-$kerf}]
-                            set dy [expr {$dy-$kerf}]
+                            set dx [expr {$dx-$halfkerf}]
+                            set dy [expr {$dy-$halfkerf}]
                         } elseif {$cutside == "outside"} {
-                            set dx [expr {$dx+$kerf}]
-                            set dy [expr {$dy+$kerf}]
+                            set dx [expr {$dx+$halfkerf}]
+                            set dy [expr {$dy+$halfkerf}]
                         }
                     }
                     xmlutil_write_element $f "rect" \
@@ -486,13 +509,13 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                     foreach {cx cy hdx hdy rot} $data break
                     set hdx [expr {abs($hdx)}]
                     set hdy [expr {abs($hdy)}]
-                    if {$kerf} {
+                    if {$halfkerf} {
                         if {$cutside == "inside"} {
-                            set hdx [expr {$hdx-$kerf}]
-                            set hdy [expr {$hdy-$kerf}]
+                            set hdx [expr {$hdx-$halfkerf}]
+                            set hdy [expr {$hdy-$halfkerf}]
                         } elseif {$cutside == "outside"} {
-                            set hdx [expr {$hdx+$kerf}]
-                            set hdy [expr {$hdy+$kerf}]
+                            set hdx [expr {$hdx+$halfkerf}]
+                            set hdy [expr {$hdy+$halfkerf}]
                         }
                     }
                     set x0 [expr {$cx-$hdx}]
@@ -509,11 +532,11 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                 }
                 ARC {
                     foreach {cx cy rad1 start extent} $data break
-                    if {$kerf} {
+                    if {$halfkerf} {
                         if {$cutside == "inside"} {
-                            set rad1 [expr {$rad1-$kerf}]
+                            set rad1 [expr {$rad1-$halfkerf}]
                         } elseif {$cutside == "outside"} {
-                            set rad1 [expr {$rad1+$kerf}]
+                            set rad1 [expr {$rad1+$halfkerf}]
                         }
                     }
                     set startang [expr {fmod($start,360.0)*$pi/180.0}]
@@ -536,13 +559,13 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                 }
                 ROTARC {
                     foreach {cx cy rad1 rad2 start extent rot} $data break
-                    if {$kerf} {
+                    if {$halfkerf} {
                         if {$cutside == "inside"} {
-                            set rad1 [expr {$rad1-$kerf}]
-                            set rad2 [expr {$rad2-$kerf}]
+                            set rad1 [expr {$rad1-$halfkerf}]
+                            set rad2 [expr {$rad2-$halfkerf}]
                         } elseif {$cutside == "outside"} {
-                            set rad1 [expr {$rad1+$kerf}]
-                            set rad2 [expr {$rad2+$kerf}]
+                            set rad1 [expr {$rad1+$halfkerf}]
+                            set rad2 [expr {$rad2+$halfkerf}]
                         }
                     }
                     set startang [expr {fmod($start,360.0)*$pi/180.0}]
@@ -610,15 +633,15 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
                 }
                 LINES {
                     set lineset [list $data]
-                    if {$kerf} {
+                    if {$halfkerf} {
                         if {$cutside == "right"} {
-                            set lineset [mlcnc_path_offset $data $kerf]
+                            set lineset [mlcnc_path_offset $data $halfkerf]
                         } elseif {$cutside == "left"} {
-                            set lineset [mlcnc_path_offset $data -$kerf]
+                            set lineset [mlcnc_path_offset $data -$halfkerf]
                         } elseif {$cutside == "inside"} {
-                            set lineset [mlcnc_path_inset $data $kerf]
+                            set lineset [mlcnc_path_inset $data $halfkerf]
                         } elseif {$cutside == "outside"} {
-                            set lineset [mlcnc_path_inset $data -$kerf]
+                            set lineset [mlcnc_path_inset $data -$halfkerf]
                         }
                     }
                     foreach data $lineset {
@@ -723,7 +746,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid kerf objcountvar {linepfx ""}} {
 }
 
 
-proc ffmt_plugin_writefile_svg {win canv filename kerf} {
+proc ffmt_plugin_writefile_svg {win canv filename halfkerf} {
     global svg_top_pos
     set objcount [llength [cadobjects_object_ids $canv]]
     progwin_create .svg-progwin "tkCAD Export" "Exporting SVG file..."
@@ -748,7 +771,7 @@ proc ffmt_plugin_writefile_svg {win canv filename kerf} {
         xmlutil_write_block_open $f "g" id $layername stroke [layer_color $canv $layer]
         foreach objid [layer_objects $canv $layer] {
             incr objnum
-            ffmt_plugin_writeobj_svg $win $canv $f $objid $kerf objnum "    "
+            ffmt_plugin_writeobj_svg $win $canv $f $objid $halfkerf objnum "    "
             progwin_callback .svg-progwin $objcount $objnum
         }
         puts -nonewline $f "  "
