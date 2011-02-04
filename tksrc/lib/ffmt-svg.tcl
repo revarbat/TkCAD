@@ -1428,7 +1428,7 @@ proc ffmt_plugin_readfile_svg {win canv filename {svgmat {}}} {
                                 set coords [list $ox $oy]
                             }
                             if {[llength $coords] >=4} {
-                                foreach {cpx cpy} [lrange $coords end-3 end-2] break
+                                foreach {cpx1 cpy1} [lrange $coords end-3 end-2] break
                             } else {
                                 set cpx1 $ox
                                 set cpy1 $oy
@@ -1438,7 +1438,9 @@ proc ffmt_plugin_readfile_svg {win canv filename {svgmat {}}} {
                             while {1} {
                                 foreach {x2 d} [svg_get_float $d] break
                                 foreach {y2 d} [svg_get_float $d] break
-                                if {$y2 == ""} {
+                                foreach {x3 d} [svg_get_float $d] break
+                                foreach {y3 d} [svg_get_float $d] break
+                                if {$y3 == ""} {
                                     break
                                 }
                                 if {$isrel} {
@@ -1508,7 +1510,7 @@ proc ffmt_plugin_readfile_svg {win canv filename {svgmat {}}} {
                                 set coords [list $ox $oy]
                             }
                             if {[llength $coords] >=4} {
-                                foreach {cpx cpy} [lrange $coords end-3 end-2] break
+                                foreach {cpx1 cpy1} [lrange $coords end-3 end-2] break
                             } else {
                                 set cpx1 $ox
                                 set cpy1 $oy

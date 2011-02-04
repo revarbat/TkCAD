@@ -1,3 +1,9 @@
+tkCAD 0.222
+Fixed a bug in importing SVG files with paths using S cubic shorthand.
+Fixed a bug in importing SVG files with paths using T quadratic shorthand.
+
+
+
 tkCAD 0.221
 Added Kerf adjustment dialog when exporting to SVG For Laser.
 
