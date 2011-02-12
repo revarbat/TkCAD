@@ -186,6 +186,7 @@ proc mainwin_create {} {
     cadobjects_clear_modified $win.canv
     mainmenu_create $win
     after 100 mainwin_create2 $win $snapwin
+    return $win
 }
 
 

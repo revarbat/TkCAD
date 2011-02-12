@@ -1,3 +1,8 @@
+tkCAD 0.223
+Fixed a bug with opening a new window when one was already open.
+
+
+
 tkCAD 0.222
 Fixed a bug in importing SVG files with paths using S cubic shorthand.
 Fixed a bug in importing SVG files with paths using T quadratic shorthand.
