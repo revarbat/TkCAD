@@ -242,7 +242,7 @@ proc toolwin_popup_menu {base groupname} {
                     -activebackground blue -command $cmd]
         bindtags $btn [list $btn ToolMenu Radiobutton all]
         if {$tkey != ""} {
-            bind ToolMenu <Key-$tkey> "$btn invoke ; break"
+            bind ToolMenu <Key-$tkey> "if {\[winfo exists $btn\]} {$btn invoke} else {toolwin_canvas_rebind $base; event generate ToolMenu <Key-$tkey>}; break"
         }
         catch { tooltip::tooltip $btn $hint }
         pack $btn -side left
