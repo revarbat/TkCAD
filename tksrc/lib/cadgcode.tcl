@@ -66,13 +66,17 @@ proc cadgcode_compare_pathset_insideness {pathset1 pathset2} {
     foreach {bxe bye} [lrange $ps2path end-1 end] break
 
     if {hypot($aye-$ay0,$axe-$ax0) <= 1e-5} {
-        if {[mlcnc_path_circumscribes_point $ps1path $bx0 $by0]} {
-            return -1
+        if {[llength $ps1path] > 3} {
+            if {[mlcnc_path_circumscribes_point $ps1path $bx0 $by0]} {
+                return -1
+            }
         }
     }
     if {hypot($bye-$by0,$bxe-$bx0) <= 1e-5} {
-        if {[mlcnc_path_circumscribes_point $ps2path $ax0 $ay0]} {
-            return 1
+        if {[llength $ps2path] > 3} {
+            if {[mlcnc_path_circumscribes_point $ps2path $ax0 $ay0]} {
+                return 1
+            }
         }
     }
     return 0
