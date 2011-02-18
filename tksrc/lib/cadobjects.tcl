@@ -208,7 +208,9 @@ proc cadobjects_get_objids_near {canv canvx canvy nearness} {
     set cids [$canv find overlapping $x0 $y0 $x1 $y1]
     foreach cid $cids {
         set objid [cadobjects_objid_from_cid $canv $cid]
-        set objarr($objid) 1
+        if {$objid != ""} {
+            set objarr($objid) 1
+        }
     }
     return [array names objarr]
 }
@@ -1550,6 +1552,33 @@ proc cadobjects_object_slice {canv objid x y} {
     }
     mainwin_update_layerwin [cadobjects_mainwin $canv]
     return $objids
+}
+
+
+proc cadobjects_objects_connect {canv obj1 x1 y1 obj2 x2 y2} {
+    set objs1 [cadobjects_object_slice $canv $obj1 $x1 $y1]
+    set objs2 [cadobjects_object_slice $canv $obj2 $x2 $y2]
+    set con1 [cadobjects_object_create $canv LINE [list $x1 $y1 $x2 $y2]]
+    set con2 [cadobjects_object_create $canv LINE [list $x2 $y2 $x1 $y1]]
+
+    set o1 [lindex $objs1 0]
+    set o2 [lindex $objs1 end]
+    set o3 [lindex $objs2 0]
+    set o4 [lindex $objs2 end]
+
+    cadselect_clear $canv
+    foreach obj [list $o1 $con1 $o3] {
+        cadselect_add $canv $obj
+    }
+    plugin_line_join_selected $canv
+
+    cadselect_clear $canv
+    foreach obj [list $o2 $con2 $o4] {
+        cadselect_add $canv $obj
+    }
+    plugin_line_join_selected $canv
+    mainwin_update_layerwin [cadobjects_mainwin $canv]
+    return $o1
 }
 
 
@@ -3129,6 +3158,7 @@ proc cadobjects_gather_points {canv x y advance} {
                 cadobjects_object_clear_construction_points $canv
             } else {
                 cadobjects_object_draw_construction_point $canv $x $y
+                cadobjects_toolcall "wasclicked" $canv $tooltoken $coords
                 set cadobjectsInfo($canv-NEWHASLASTNODE) 0
                 incr toolstate
             }

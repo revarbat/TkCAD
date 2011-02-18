@@ -1,12 +1,19 @@
 proc plugin_nodeadd_execute {canv coords isconf} {
-    set selids [cadselect_list $canv]
-    if {[llength $selids] == 1} {
-        set objid [lindex $selids 0]
-    } else {
-        set cid [$canv find withtag current]
-        set objid [cadobjects_objid_from_cid $canv $cid]
+    set cid [$canv find withtag {current}]
+    if {$cid == ""} {
+        bell
+        return
     }
+    set objid [cadobjects_objid_from_cid $canv $cid]
     if {$objid == ""} {
+        bell
+        return
+    }
+    if {![cadselect_ismember $canv $objid]} {
+        if {![cadobjects_modkey_isdown SHIFT]} {
+            cadselect_clear $canv
+        }
+        cadselect_add $canv $objid
         return
     }
     cadobjects_object_node_add $canv $objid [lindex $coords 0] [lindex $coords 1]
@@ -19,7 +26,20 @@ proc plugin_nodeadd_execute {canv coords isconf} {
 proc plugin_nodedel_execute {canv coords isconf} {
     set cid [$canv find withtag {current&&CP}]
     if {$cid == ""} {
-        bell
+        set cid [$canv find withtag {current}]
+        if {$cid == ""} {
+            bell
+            return
+        }
+        set objid [cadobjects_objid_from_cid $canv $cid]
+        if {$objid == ""} {
+            bell
+            return
+        }
+        if {![cadobjects_modkey_isdown SHIFT]} {
+            cadselect_clear $canv
+        }
+        cadselect_add $canv $objid
         return
     }
     foreach {objid nodenum} [cadobjects_objid_and_node_from_cid $canv $cid] break
@@ -35,6 +55,23 @@ proc plugin_nodedel_execute {canv coords isconf} {
 
 
 proc plugin_slice_execute {canv coords isconf} {
+    set cid [$canv find withtag {current}]
+    if {$cid == ""} {
+        bell
+        return
+    }
+    set objid [cadobjects_objid_from_cid $canv $cid]
+    if {$objid == ""} {
+        bell
+        return
+    }
+    if {![cadselect_ismember $canv $objid]} {
+        if {![cadobjects_modkey_isdown SHIFT]} {
+            cadselect_clear $canv
+        }
+        cadselect_add $canv $objid
+        return
+    }
     set selids [cadselect_list $canv]
     if {[llength $selids] == 0} {
         set cid [$canv find withtag current]
@@ -44,7 +81,7 @@ proc plugin_slice_execute {canv coords isconf} {
     foreach objid $selids {
         set nuobjs [cadobjects_object_slice $canv $objid [lindex $coords 0] [lindex $coords 1]]
         if {[llength $nuobjs] > 0} {
-            lappend selobjs [lindex $nuobjs 0]
+            lappend selobjs {*}$nuobjs
         }
     }
     cadselect_clear $canv
@@ -60,7 +97,20 @@ proc plugin_slice_execute {canv coords isconf} {
 proc plugin_reorient_execute {canv coords isconf} {
     set cid [$canv find withtag {current&&CP}]
     if {$cid == ""} {
-        bell
+        set cid [$canv find withtag {current}]
+        if {$cid == ""} {
+            bell
+            return
+        }
+        set objid [cadobjects_objid_from_cid $canv $cid]
+        if {$objid == ""} {
+            bell
+            return
+        }
+        if {![cadobjects_modkey_isdown SHIFT]} {
+            cadselect_clear $canv
+        }
+        cadselect_add $canv $objid
         return
     }
     foreach {objid nodenum} [cadobjects_objid_and_node_from_cid $canv $cid] break
@@ -70,6 +120,79 @@ proc plugin_reorient_execute {canv coords isconf} {
     }
     cadobjects_object_node_reorient $canv $objid $nodenum
 }
+
+
+
+
+
+
+
+proc plugin_connect_wasclicked {canv coords} {
+    set toolid [tool_current]
+    if {[llength $coords] < 2} {
+        cadselect_clear $canv
+        tool_setdatum $toolid "OBJ1" ""
+        return
+    }
+    if {[llength $coords] < 4} {
+        foreach {x0 y0} [cadobjects_scale_coords $canv $coords] break
+        set objids [cadobjects_get_objids_near $canv $x0 $y0 1.0]
+        if {[llength $objids] == 0} {
+            cadobjects_tool_clear_coords $canv
+            bell
+            return
+        }
+        set objid [lindex $objids 0]
+
+        cadselect_clear $canv
+        cadselect_add $canv $objid
+        tool_setdatum $toolid "OBJ1" $objid
+    }
+}
+
+
+
+proc plugin_connect_preview {canv coords isconf} {
+    set toolid [tool_current]
+    if {[llength $coords] < 4} {
+        return
+    }
+    foreach {x0 y0 x1 y1} [cadobjects_scale_coords $canv $coords] break
+    $canv delete Preview
+    set linecoords [list $x0 $y0 $x1 $y1]
+    $canv create line $linecoords -fill blue -tags Preview
+}
+
+
+
+proc plugin_connect_execute {canv coords isconf} {
+    $canv delete Preview
+    foreach {x0 y0 x1 y1} [cadobjects_scale_coords $canv $coords] break
+    set objids [cadobjects_get_objids_near $canv $x1 $y1 1.0]
+    if {[llength $objids] == 0} {
+        bell
+        return
+    }
+    set toolid [tool_current]
+    set obj1 [tool_getdatum $toolid "OBJ1"]
+    set obj2 [lindex $objids 0]
+    if {$obj2 == $obj1} {
+        bell
+        return
+    } else {
+        cadselect_add $canv $obj2
+    }
+
+    cadselect_clear $canv
+    foreach {x0 y0 x1 y1} $coords break
+    set nuobj [cadobjects_objects_connect $canv $obj1 $x0 $y0 $obj2 $x1 $y1]
+    #cadselect_add $canv $nuobj
+}
+
+
+
+
+
 
 
 
@@ -1115,6 +1238,10 @@ proc plugin_transforms_register {} {
     tool_register_ex REORIENT "&Nodes" "&Change Loop's Start Node" {
         {1    "Node to Reorient Endpoints To."}
     } -icon "tool-reorient" -cursor "top_left_arrow" -snaps {} -showctls
+    tool_register_ex CONNECT "&Nodes" "C&onnect" {
+        {1    "Start Point"}
+        {2    "End Point"}
+    } -icon "tool-connect"
     tool_register_ex TRANSLATE "&Transforms" "&Translate" {
         {1    "Reference Point"}
         {2    "Move To"}

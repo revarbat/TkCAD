@@ -780,7 +780,10 @@ proc plugin_line_join_selected {canv {tolerance 1e-3}} {
         set prevjoins $joins
         cadobjects_redraw $canv
     }
-    tk_messageBox -parent [winfo toplevel $canv] -icon info -type ok -message "$joins joins performed."
+    if {$joins == 0} {
+        bell
+    }
+    #tk_messageBox -parent [winfo toplevel $canv] -icon info -type ok -message "$joins joins performed."
 }
 
 
