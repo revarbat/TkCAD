@@ -1,3 +1,9 @@
+tkCAD 0.224
+Added time estimation to gcode backtracer.
+Added tkpath anti-aliasing support to gcode backtracer.
+
+
+
 tkCAD 0.223
 Fixed a bug with opening a new window when one was already open.
 
