@@ -5,7 +5,7 @@ exec wish "$0" "$@"
 #############################################################################
 #
 # G-code backtracer
-# copyright 2006-2007 by Fuzzball Software
+# copyright 2006-2011 by Fuzzball Software
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ exec wish "$0" "$@"
 #############################################################################
 
 package require opt
-#catch { package require Img }
+catch { package require tkpath }
 
 
 proc gcode_gvars {win args} {
@@ -160,14 +160,16 @@ proc gcode_parameters_commit {} {
 proc gcode_integer {strvar cmd linenum} {
 	upvar $strvar str
 	if {$str == ""} {
-		error "Expected integer or expression after '$cmd' at line $linenum"
+		puts stderr "Expected integer or expression after '$cmd' at line $linenum"
+		set val 0.0
+	} else {
+		set val [gcode_number str $cmd $linenum]
 	}
-	set val [gcode_number str $cmd $linenum]
 	set intval [expr {round($val)}]
 	if {abs($val-$intval) < 0.00001} {
 		return $intval
 	}
-	error "Expected integer after '$cmd' at line $linenum"
+	puts stderr "Expected integer after '$cmd' at line $linenum"
 }
 
 
@@ -307,7 +309,8 @@ proc gcode_expr {strvar cmd linenum} {
 proc gcode_number {strvar cmd linenum} {
 	upvar $strvar str
 	if {$str == ""} {
-		error "Expected number after '$cmd' at line $linenum"
+		puts stderr "Expected number after '$cmd' at line $linenum"
+		return 0.0
 	}
 	set nch [string index $str 0]
 	if {$nch == "+" || $nch == "-" || [string is digit $nch] || $nch == "."} {
@@ -359,7 +362,8 @@ proc gcode_number {strvar cmd linenum} {
 		set parmnum [gcode_integer str "#" $linenum]
 		return [gcode_parameter $parmnum $linenum]
 	}
-	error "Expected number after '$cmd' at line $linenum"
+	puts stderr "Expected number after '$cmd' at line $linenum"
+	return 0.0
 }
 
 
@@ -561,6 +565,20 @@ proc gcode_shift_line {x1 y1 x2 y2 amount} {
 }
 
 
+
+proc format_elapsed_time {secs} {
+    set days [expr {int($secs/86400)}]
+	set secs [expr {int($secs-$days*86400)}]
+	set out ""
+	if {$days > 0} {
+	    append out "${days}d "
+	}
+	append out [clock format $secs -format "%T" -gmt 1]
+	return $out
+}
+
+
+
 proc gcode_toolpath_append {base var x y z a b c type linenum reallinenum} {
 	gcode_gvars $base xoffset yoffset zoffset aoffset boffset coffset
 	gcode_gvars $base prev_x prev_y prev_z prev_a prev_b prev_c
@@ -568,6 +586,7 @@ proc gcode_toolpath_append {base var x y z a b c type linenum reallinenum} {
 	gcode_gvars $base b_matrix vector_bx0 vector_by0 vector_bz0 vector_bx1 vector_by1 vector_bz1
 	gcode_gvars $base c_matrix vector_cx0 vector_cy0 vector_cz0 vector_cx1 vector_cy1 vector_cz1
 	gcode_gvars $base lencomp lencomptool diamcomp diamcomptool tool_width
+	gcode_gvars $base units feedrate build_time
 
 	upvar $var coordlist
 
@@ -596,6 +615,19 @@ proc gcode_toolpath_append {base var x y z a b c type linenum reallinenum} {
 
 	set lastx2 $lastx
 	set lasty2 $lasty
+
+	set dx [expr {$lastx-$prev_x}]
+	set dy [expr {$lasty-$prev_y}]
+	set dz [expr {$lastz-$prev_z}]
+	set seglen [expr {sqrt(($dx*$dx)+($dy*$dy)+($dz*$dz))}]
+	set rate $feedrate
+	if {$type == "rapid"} {
+	    set rate 2500.0
+	}
+	if {$units == "mm"} {
+		set rate [expr {$rate/25.4}]
+	}
+    set build_time [expr {$build_time+($seglen/($rate/60.0))}]
 
 	if {$lencomp == "plus"} {
 		set tlo [gcode_tool_length $lencomptool]
@@ -682,6 +714,7 @@ proc gcode_parse_to_toolpath {base channel {progresscb ""} {codelb ""}} {
 	gcode_gvars $base a_matrix vector_ax0 vector_ay0 vector_az0 vector_ax1 vector_ay1 vector_az1
 	gcode_gvars $base b_matrix vector_bx0 vector_by0 vector_bz0 vector_bx1 vector_by1 vector_bz1
 	gcode_gvars $base c_matrix vector_cx0 vector_cy0 vector_cz0 vector_cx1 vector_cy1 vector_cz1
+	gcode_gvars $base units feedrate build_time
 
 	set pi 3.141592653589793236
 	set max_arc_err 0.0001 ;# inches error
@@ -709,6 +742,7 @@ proc gcode_parse_to_toolpath {base channel {progresscb ""} {codelb ""}} {
 	set canned_feed 0.0
 	set canned_return_level "orig"
 	set tool_width 0.0
+	set build_time 0.0
 
 	set prev_x 0.0
 	set prev_y 0.0
@@ -780,7 +814,6 @@ proc gcode_parse_to_toolpath {base channel {progresscb ""} {codelb ""}} {
 		set do_set_origin 0
 		set do_go_home 0
 		set do_set_offsets 0
-		set new_feed_rate $feedrate
 
 		while {$line != ""} {
 			set cmd [string toupper [string index $line 0]]
@@ -849,7 +882,7 @@ proc gcode_parse_to_toolpath {base channel {progresscb ""} {codelb ""}} {
 					set diamcomptool [gcode_integer line $cmd $linenum]
 				}
 				"F" {
-					set new_feed_rate [gcode_number line $cmd $linenum]
+					set feedrate [gcode_number line $cmd $linenum]
 				}
 				"G" {
 					set gnum [gcode_number line $cmd $linenum]
@@ -998,7 +1031,7 @@ proc gcode_parse_to_toolpath {base channel {progresscb ""} {codelb ""}} {
 							set canned_return_level "R-point"
 						}
 						default {
-							error "Unhandled code 'G$gnum' at line $linenum"
+							puts stderr "Unhandled code 'G$gnum' at line $linenum"
 						}
 					}
 				}
@@ -1079,7 +1112,7 @@ proc gcode_parse_to_toolpath {base channel {progresscb ""} {codelb ""}} {
 					set have_z 1
 				}
 				default {
-					error "Unhandled code '$cmd' at line $linenum"
+					puts stderr "Unhandled code '$cmd' at line $linenum"
 				}
 			}
 		}
@@ -1840,7 +1873,13 @@ proc gcode_3d_plot {base {ispreview 0}} {
 		set showbitwidth 1
 	}
 
-	$isocanv delete all
+	if {[namespace exists ::tkp]} {
+		foreach child [$isocanv children 0] {
+			$isocanv delete $child
+		}
+	} else {
+		$isocanv delete all
+	}
 	$scallbl configure -text [format "%d%%" [expr {int($scalepcnt)}]]
 	if {$stereo} {
 		set smat1 $mat
@@ -1931,7 +1970,11 @@ proc gcode_3d_plot {base {ispreview 0}} {
 				set isoy0 [expr {$b1*$x0+$b2*$y0+$b3*$z0+$b4}]
 				set isox1 [expr {$a1*$x1+$a2*$y1+$a3*$z1+$a4}]
 				set isoy1 [expr {$b1*$x1+$b2*$y1+$b3*$z1+$b4}]
-				$isocanv create line $isox0 $isoy0 $isox1 $isoy1 -fill $color -width $linewidth -dash "2 2 2 2"
+				if {[namespace exists ::tkp]} {
+					$isocanv create pline [list $isox0 $isoy0 $isox1 $isoy1] -stroke $color -strokewidth $linewidth -strokedasharray "2 2 2 2"
+				} else {
+					$isocanv create line $isox0 $isoy0 $isox1 $isoy1 -fill $color -width $linewidth -dash "2 2 2 2"
+				}
 			}
 		} else {
 			set ox 0.0
@@ -1974,7 +2017,13 @@ proc gcode_3d_plot {base {ispreview 0}} {
 									set color $colover
 									set color2 $colover
 								}
-								$isocanv create line $isopath -fill $color2 -width [expr {$scaleval*$scalepcnt/100.0*$tool_width}] -capstyle round -joinstyle round -tags "zq$prevzq bitwidth $otype $stereotags"
+								if {[llength $isopath] >= 4} {
+									if {[namespace exists ::tkp]} {
+										$isocanv create polyline $isopath -stroke $color2 -strokewidth [expr {$scaleval*$scalepcnt/100.0*$tool_width}] -strokelinecap round -strokelinejoin round -tags "zq$prevzq bitwidth $otype $stereotags"
+									} else {
+										$isocanv create line $isopath -fill $color2 -width [expr {$scaleval*$scalepcnt/100.0*$tool_width}] -capstyle round -joinstyle round -tags "zq$prevzq bitwidth $otype $stereotags"
+									}
+								}
 								set lstate [expr {$show_rapid_paths?"normal":"hidden"}]
 								lappend pathlinetag "centerline"
 								set prevzq $zquant
@@ -1982,7 +2031,11 @@ proc gcode_3d_plot {base {ispreview 0}} {
 						}
 					}
 					if {[llength $isopath] >= 4} {
-						$isocanv create line $isopath -fill $color -dash $dash -state $lstate -tags "$tagpfx$osrcline $pathlinetag $otype $stereotags"
+						if {[namespace exists ::tkp]} {
+							$isocanv create polyline $isopath -stroke $color -strokedasharray $dash -state $lstate -tags "zq$prevzq bitwidth $otype $stereotags"
+						} else {
+							$isocanv create line $isopath -fill $color -dash $dash -state $lstate -tags "$tagpfx$osrcline $pathlinetag $otype $stereotags"
+						}
 					}
 					set isopath {}
 					set isox [expr {$a1*$ox+$a2*$oy+$a3*$oz+$a4}]
@@ -2027,7 +2080,13 @@ proc gcode_3d_plot {base {ispreview 0}} {
 							set color $colover
 							set color2 $colover
 						}
-						$isocanv create line $isopath -fill $color2 -width [expr {$scaleval*$scalepcnt/100.0*$tool_width}] -capstyle round -joinstyle round -tags "zq$prevzq bitwidth $otype $stereotags"
+						if {[llength $isopath] >= 4} {
+							if {[namespace exists ::tkp]} {
+								$isocanv create polyline $isopath -stroke $color2 -strokewidth [expr {$scaleval*$scalepcnt/100.0*$tool_width}] -strokelinecap round -strokelinejoin round -tags "zq$prevzq bitwidth $otype $stereotags"
+							} else {
+								$isocanv create line $isopath -fill $color2 -width [expr {$scaleval*$scalepcnt/100.0*$tool_width}] -capstyle round -joinstyle round -tags "zq$prevzq bitwidth $otype $stereotags"
+							}
+						}
 						set lstate [expr {$show_rapid_paths?"normal":"hidden"}]
 						lappend pathlinetag "centerline"
 						set prevzq $zquant
@@ -2035,7 +2094,11 @@ proc gcode_3d_plot {base {ispreview 0}} {
 				}
 			}
 			if {[llength $isopath] >= 4} {
-				$isocanv create line $isopath -fill $color -dash $dash -state $lstate -tags "$tagpfx$osrcline $pathlinetag $otype $stereotags"
+				if {[namespace exists ::tkp]} {
+					$isocanv create polyline $isopath -stroke $color -strokedasharray $dash -state $lstate -tags "$tagpfx$osrcline $pathlinetag $otype $stereotags"
+				} else {
+					$isocanv create line $isopath -fill $color -dash $dash -state $lstate -tags "$tagpfx$osrcline $pathlinetag $otype $stereotags"
+				}
 			}
 
 			set midx [expr {($minx+$maxx)/2.0}]
@@ -2060,9 +2123,17 @@ proc gcode_3d_plot {base {ispreview 0}} {
 				set isox1 [expr {$a1*$x1+$a2*$y1+$a3*$z1+$a4}]
 				set isoy1 [expr {$b1*$x1+$b2*$y1+$b3*$z1+$b4}]
 				if {hypot($isox1-$isox0,$isoy1-$isoy0) > 12.0} {
-					$isocanv create line $isox0 $isoy0 $isox1 $isoy1 -fill $color -arrow last -width $linewidth -tags axis
+					if {[namespace exists ::tkp]} {
+						$isocanv create pline [list $isox0 $isoy0 $isox1 $isoy1] -stroke $color -strokewidth $linewidth -tags axis
+					} else {
+						$isocanv create line $isox0 $isoy0 $isox1 $isoy1 -fill $color -arrow last -width $linewidth -tags axis
+					}
 				} else {
-					$isocanv create line $isox0 $isoy0 $isox1 $isoy1 -fill $color -width $linewidth -tags axis
+					if {[namespace exists ::tkp]} {
+						$isocanv create pline [list $isox0 $isoy0 $isox1 $isoy1] -stroke $color -strokewidth $linewidth -tags axis
+					} else {
+						$isocanv create line $isox0 $isoy0 $isox1 $isoy1 -fill $color -width $linewidth -tags axis
+					}
 				}
 			}
 		}
@@ -2580,15 +2651,21 @@ proc gcode_3view_win_create {needsprefs} {
 	$panes add [set fr1 [frame $panes.p1]] -weight 2
 	$panes add [set fr2 [frame $panes.p2]] -weight 1
 
-	set isocanv [canvas $fr1.isocanv -width $ysize -height $ysize -highlightthickness 0 -borderwidth 1 -relief sunken -xscrollcommand "$fr1.isocanv delete Help; $fr1.isohscr set" -yscrollcommand "$fr1.isocanv delete Help; $fr1.isovscr set"]
+	set canvcmd canvas
+	if {[namespace exists ::tkp]} {
+		set canvcmd ::tkp::canvas
+	}
+	set isocanv [$canvcmd $fr1.isocanv -width $ysize -height $ysize -highlightthickness 0 -borderwidth 1 -relief sunken -xscrollcommand "$fr1.isocanv delete Help; $fr1.isohscr set" -yscrollcommand "$fr1.isocanv delete Help; $fr1.isovscr set"]
 	set scallbl [label $fr1.scallbl -text "100%" -width 6 -justify left -font TkSmallCaptionFont]
 	set sterlbl [label $fr1.sterlbl -text "Normal" -width 10 -justify left -font TkSmallCaptionFont]
 	set isohscr [scrollbar $fr1.isohscr -orient horizontal -command [list $isocanv xview]]
 	set isovscr [scrollbar $fr1.isovscr -orient vertical -command [list $isocanv yview]]
 
+	set esttime [label $fr2.esttime -text "Est. Time:" -justify left -font TkSmallCaptionFont]
 	set gcodelb [listbox $fr2.gcodelb -width 35 -selectmode single -font $fixedfont -xscrollcommand [list $fr2.gcodehs set] -yscrollcommand [list $fr2.gcodevs set]]
 	set gcodehs [scrollbar $fr2.gcodehs -orient horizontal -command [list $gcodelb xview]]
 	set gcodevs [scrollbar $fr2.gcodevs -orient vertical -command [list $gcodelb yview]]
+
 
 	grid columnconfigure $fr1 2 -weight 1
 	grid rowconfigure $fr1 0 -weight 1
@@ -2600,9 +2677,11 @@ proc gcode_3view_win_create {needsprefs} {
 	grid $isohscr -sticky new
 
 	grid columnconfigure $fr2 0 -weight 1
-	grid rowconfigure $fr2 0 -weight 1
+	grid rowconfigure $fr2 1 -weight 1
+	grid $esttime x
 	grid $gcodelb $gcodevs
 	grid $gcodehs x        
+	grid $esttime -sticky nw
 	grid $gcodelb -sticky nsew
 	grid $gcodevs -sticky nsw
 	grid $gcodehs -sticky new
@@ -2754,7 +2833,7 @@ proc progress_destroy {win} {
 
 
 proc gcode_load_and_show {file basewin} {
-	gcode_gvars $basewin toolpath rendertime segment_number minx maxx miny maxy minz maxz
+	gcode_gvars $basewin toolpath rendertime segment_number minx maxx miny maxy minz maxz build_time
 	set segment_number 0
 
 	set toolpath {}
@@ -2777,6 +2856,7 @@ proc gcode_load_and_show {file basewin} {
 
 	gcode_3d_color_segment $basewin 0 #f77
 
+	$basewin.pw.p2.esttime configure -text "Est. Time: [format_elapsed_time $build_time]"
 	set isocanv $basewin.pw.p1.isocanv
 	show_help $isocanv
 	after 1000 show_help $isocanv
