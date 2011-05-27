@@ -15,7 +15,7 @@ proc main {} {
     global tkcad_plugin_root
     global tkcad_prefs_dir
 
-    set tkcad_version 0.224
+    set tkcad_version 0.225
     set tcl_precision 16
 
     if {[catch {tk windowingsystem} winsys]} {
