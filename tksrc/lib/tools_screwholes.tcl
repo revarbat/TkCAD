@@ -246,22 +246,9 @@ proc plugin_taphole_drawobj {canv objid coords tags color fill width dash} {
     set scalefactor [cadobjects_get_scale_factor $canv]
     set radius [expr {$diam/2.0}]
 
-    if {[namespace exists ::tkp]} {
-        foreach {cx cy rad1 dummy} [cadobjects_scale_coords $canv [list $cx $cy $radius 0.0]] break
-        $canv create circle [list $cx $cy] -r $rad1 -tags $tags -fill "" -stroke $color -strokewidth $width -strokedasharray [pathdash [dashpat construction]]
-        cadobjects_object_draw_center_cross $canv $cx $cy $rad1 $tags $color $width
-    } else {
-        set x0 [expr {$cx-$radius}]
-        set y0 [expr {$cy-$radius}]
-        set x1 [expr {$cx+$radius}]
-        set y1 [expr {$cy+$radius}]
-        set box [cadobjects_scale_coords $canv [list $x0 $y0 $x1 $y1]]
-        $canv create oval $box -tags $tags -outline $color -width $width -dash [dashpat construction]
-
-        foreach {cx cy} [cadobjects_scale_coords $canv [list $cx $cy]] break
-        set scrad [expr {$radius*$dpi*$scalefactor}]
-        cadobjects_object_draw_center_cross $canv $cx $cy $scrad $tags $color $width
-    }
+    foreach {cx cy rad1 dummy} [cadobjects_scale_coords $canv [list $cx $cy $radius 0.0]] break
+    cadobjects_object_draw_circle $canv $cx $cy $rad1 $tags $color [dashpat construction] 1.0
+    cadobjects_object_draw_center_cross $canv $cx $cy $rad1 $tags $color $width
 
     return 0 ;# Also draw default decomposed shape.
 }
@@ -1247,13 +1234,7 @@ proc plugin_hexnut_drawobj {canv objid coords tags color fill width dash} {
     foreach {cx cy radius dummy} $coords break
     set outrad $radius
 
-    set x0 [expr {$cx-$outrad}]
-    set y0 [expr {$cy-$outrad}]
-    set x1 [expr {$cx+$outrad}]
-    set y1 [expr {$cy+$outrad}]
-    set box [list $x0 $y0 $x1 $y1]
-    $canv create oval $box -tags $tags -outline $color -width $width -dash [dashpat construction]
-
+    cadobjects_object_draw_circle $canv $cx $cy $outrad $tags $color [dashpat construction] 1.0
     cadobjects_object_draw_center_cross $canv $cx $cy $radius $tags $color $width
     return 0 ;# Also draw default decomposed shape.
 }

@@ -53,18 +53,12 @@ proc plugin_ellipsectr_flipobj {canv objid coords x0 y0 x1 y1} {
 
 
 proc plugin_ellipsectr_drawobj {canv objid coords tags color fill width dash} {
-    set box [cadobjects_object_getdatum $canv $objid "BOX"]
-    set box [cadobjects_scale_coords $canv $box]
-    foreach {x0 y0 x1 y1} $box break;
-
     set coords [cadobjects_scale_coords $canv $coords]
     foreach {cx cy cpx1 cpy1} $coords break
 
-    # Draw lines from center to keep dash pattern aligned.
-    $canv create line [list $cx $cy $x0 $cy] -tags $tags -fill $color -width $width -dash [dashpat centerline]
-    $canv create line [list $cx $cy $x1 $cy] -tags $tags -fill $color -width $width -dash [dashpat centerline]
-    $canv create line [list $cx $cy $cx $y0] -tags $tags -fill $color -width $width -dash [dashpat centerline]
-    $canv create line [list $cx $cy $cx $y1] -tags $tags -fill $color -width $width -dash [dashpat centerline]
+    set rad1 [expr {abs($cpx1-$cx)}]
+    set rad2 [expr {abs($cpy1-$cy)}]
+    cadobjects_object_draw_oval_cross $canv $cx $cy $rad1 $rad2 $tags $color 1.0
 
     return 0 ;# Also draw default decomposed shape.
 }

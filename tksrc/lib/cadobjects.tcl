@@ -3825,7 +3825,41 @@ proc cadobjects_object_draw_control_line {canv objid x0 y0 x1 y1 cpnum color {da
 }
 
 
+proc cadobjects_object_draw_circle {canv cx cy radius tags color {dash ""} {width 0.001}} {
+    cadobjects_object_draw_oval $canv $cx $cy $radius $radius $tags $color $dash $width
+}
+
+
+proc cadobjects_object_draw_oval {canv cx cy rad1 rad2 tags color {dash ""} {width 0.001}} {
+    if {$color == "" || $color == "none"} {
+        set layerid [cadobjects_object_getlayer $canv $objid]
+        set color [layer_color $canv $layerid]
+        if {$color == "" || $color == "none"} {
+            set color black
+        }
+    }
+    lappend tags "ConstLines"
+    set rad2 $rad1
+    #set width 1.0
+    if {[namespace exists ::tkp]} {
+        $canv create ellipse [list $cx $cy] -rx $rad1 -ry $rad2 -tags $tags -stroke $color -fill "" -strokewidth $width -strokedasharray [pathdash $dash]
+    } else {
+        set x0 [expr {$cx-$rad1}]
+        set y0 [expr {$cy-$rad2}]
+        set x1 [expr {$cx+$rad1}]
+        set y1 [expr {$cy+$rad2}]
+        set box [list $x0 $y0 $x1 $y1]
+        $canv create oval $box -tags $tags -outline $color -fill "" -width $width -dash $dash
+    }
+}
+
+
 proc cadobjects_object_draw_center_cross {canv cx cy radius tags color {width 0.001}} {
+    cadobjects_object_draw_oval_cross $canv $cx $cy $radius $radius $tags $color $width
+}
+
+
+proc cadobjects_object_draw_oval_cross {canv cx cy rad1 rad2 tags color {width 0.001}} {
     if {$color == "" || $color == "none"} {
         set layerid [cadobjects_object_getlayer $canv $objid]
         set color [layer_color $canv $layerid]
@@ -3835,10 +3869,10 @@ proc cadobjects_object_draw_center_cross {canv cx cy radius tags color {width 0.
     }
     lappend tags "ConstLines"
     set width 1.0
-    set x0 [expr {$cx-$radius}]
-    set y0 [expr {$cy-$radius}]
-    set x1 [expr {$cx+$radius}]
-    set y1 [expr {$cy+$radius}]
+    set x0 [expr {$cx-$rad1}]
+    set y0 [expr {$cy-$rad2}]
+    set x1 [expr {$cx+$rad1}]
+    set y1 [expr {$cy+$rad2}]
     # Draw lines from center to keep dash pattern aligned.
     if {[namespace exists ::tkp]} {
         $canv create pline [list $cx $cy $x0 $cy] -tags $tags -stroke $color -strokewidth $width -strokedasharray [pathdash [dashpat centerline]]
