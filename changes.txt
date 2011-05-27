@@ -1,5 +1,6 @@
 tkCAD 0.225
 Fixed scaling of construction line widths in hexnuts and ellipses.
+Fixed keybinding for Difference of Polygons.
 
 
 

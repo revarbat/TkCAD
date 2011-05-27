@@ -95,7 +95,7 @@ proc mainmenu_create {win} {
     bind all <Command-Key-bracketleft>  "mainmenu_menu_invoke %W {Edit|Rotate 90 CW} ; break"
     bind all <Command-Key-bracketright> "mainmenu_menu_invoke %W {Edit|Rotate 90 CCW} ; break"
     bind all <Option-Command-Key-u>     "mainmenu_menu_invoke %W {Edit|Union of Polygons} ; break"
-    bind all <Option-Command-Key-d>     "mainmenu_menu_invoke %W {Edit|Difference of Polygons} ; break"
+    bind all <Control-Option-Command-Key-d>     "mainmenu_menu_invoke %W {Edit|Difference of Polygons} ; break"
     bind all <Option-Command-Key-i>     "mainmenu_menu_invoke %W {Edit|Intersection of Polygons} ; break"
 
     bind all <Command-Key-r>        "mainmenu_menu_invoke %W {View|Redraw} ; break"
@@ -161,7 +161,7 @@ proc mainmenu_create {win} {
     $editmenu add command -label "Vectorize Bitmap" -underline 0 -command "mainwin_vectorize_bitmaps \[mainwin_current\]"
     $editmenu add separator
     $editmenu add command -label "Union of Polygons" -underline 0 -accelerator "Option+Command+U" -command "mainwin_paths_union \[mainwin_current\]"
-    $editmenu add command -label "Difference of Polygons" -underline 0 -accelerator "Option+Command+D" -command "mainwin_paths_diff \[mainwin_current\]"
+    $editmenu add command -label "Difference of Polygons" -underline 0 -accelerator "Control+Option+Command+D" -command "mainwin_paths_diff \[mainwin_current\]"
     $editmenu add command -label "Intersection of Polygons" -underline 0 -accelerator "Option+Command+I" -command "mainwin_paths_intersection \[mainwin_current\]"
 
     global mainmenuInfo
