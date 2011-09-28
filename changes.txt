@@ -1,3 +1,14 @@
+tkCAD 0.227
+Changed DXF export for multi-segment lines to use AcDbPolyLine.
+  instead of AcDb2dPolyLine, for compatability with OpenSCAD.
+
+
+
+tkCAD 0.226
+Fixed bug with alignment of text objects using alignment tools.
+
+
+
 tkCAD 0.225
 Fixed scaling of construction line widths in hexnuts and ellipses.
 Fixed keybinding for Difference of Polygons.

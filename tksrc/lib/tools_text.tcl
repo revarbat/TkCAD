@@ -285,17 +285,18 @@ proc plugin_text_bbox {canv objid coords} {
     set iscncfont [cncfont_exists $ffam]
     set xwid [cncfont_measure $font $txt $lwidth]
     switch -exact -- $just {
-        center { set xoff [expr {-$xwid/2.0}] }
-        right { set xoff [expr {-$xwid}] }
+        center  { set xoff [expr {-$xwid/2.0}] }
+        right   { set xoff [expr {-$xwid}] }
         default { set xoff 0.0 }
     }
 
-    set x0 $xoff
+    set x0 0
     set x1 [expr {$x0+$xwid}]
     set mat [matrix_transform translate $xoff 0.0  rotate $rot  translate $cx $cy]
     set coords [list $x0 0.0  $x0 $fheight  $x1 $fheight  $x1 0.0]
     set coords [matrix_transform_coords $mat $coords]
-    return [::math::geometry::bbox $coords]
+    set coords [::math::geometry::bbox $coords]
+    return $coords
 }
 
 

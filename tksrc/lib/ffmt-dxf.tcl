@@ -520,26 +520,17 @@ proc ffmt_plugin_writeobj_dxf {win canv f objid objcountvar} {
                 }
                 LINES {
                     if {[llength $data]/2 > 2} {
-                        dxf_write_string $f 0 "POLYLINE"
+                        dxf_write_string $f 0 "LWPOLYLINE"
                         dxf_write_string $f 100 "AcDbEntity"
                         dxf_write_string $f 8 $layername
-                        dxf_write_string $f 100 "AcDb2dPolyline"
-                        dxf_write_length $f 10 0.0
-                        dxf_write_length $f 20 0.0
-                        dxf_write_length $f 30 0.0
-                        dxf_write_int $f 66 1
-                        dxf_write_int $f 70 8
+                        dxf_write_string $f 100 "AcDbPolyline"
+                        dxf_write_int $f 90 [expr {[llength $data]/2}]
+                        dxf_write_int $f 70 0
+                        dxf_write_int $f 43 1
                         foreach {x y} $data {
-                            dxf_write_string $f 0 "VERTEX"
-                            dxf_write_string $f 100 "AcDbEntity"
-                            dxf_write_string $f 8 $layername
-                            dxf_write_string $f 100 "AcDbVertex"
                             dxf_write_length $f 10 $x
                             dxf_write_length $f 20 $y
-                            dxf_write_length $f 30 0.0
-                            dxf_write_int $f 70 32
                         }
-                        dxf_write_string $f 0 "SEQEND"
                     } else {
                         foreach {x0 y0} [lrange $data 0 1] break
                         foreach {x1 y1} [lrange $data 2 end] {
