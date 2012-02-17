@@ -711,7 +711,7 @@ proc ffmt_plugin_writeobj_svg {win canv f objid halfkerf objcountvar {linepfx ""
                 ROTTEXT {
                     foreach {cx cy txt font just rot} $data break
                     set ffam [lindex $font 0]
-                    set fsiz [lindex $font 1]
+                    set fsiz [expr {[lindex $font 1]*125.0/72.0}]
                     switch -exact -- $just {
                         center { set anchor middle }
                         right  { set anchor end }

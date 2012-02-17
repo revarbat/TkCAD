@@ -1,8 +1,3 @@
-proc plugin_line_drawobj {canv objid coords tags color fill width dash} {
-    return 0 ;# Also draw default decomposed shape.
-}
-
-
 proc plugin_line_editfields {canv objid coords} {
     set out {}
     lappend out {
@@ -105,6 +100,39 @@ proc plugin_line_drawctls {canv objid coords color fillcolor} {
         }
         incr cpnum
     }
+
+    set pi 3.141592653589793236
+    set showdir [/prefs:get show_direction]
+    if {$showdir == 1} {
+        set ox [lindex $coords 0]
+        set oy [lindex $coords 1]
+        set cpnum 1
+        foreach {px py} [lrange $coords 2 end] {
+            if {$px != $ox || $py != $oy} {
+                set rang [expr {$pi+atan2($py-$oy,$px-$ox)}]
+                set dist [expr {hypot($py-$oy,$px-$ox)}]
+                set rad 10.0
+                set arrowang [expr {$pi/8.0}]
+                if {$rad > $dist*0.75} {
+                    set rad [expr {$dist*0.75}]
+                }
+                set x0 [expr {$rad*cos($rang+$arrowang)+$px}]
+                set y0 [expr {$rad*sin($rang+$arrowang)+$py}]
+                set x1 [expr {$rad*cos($rang-$arrowang)+$px}]
+                set y1 [expr {$rad*sin($rang-$arrowang)+$py}]
+                set ox $px
+                set oy $py
+                cadobjects_object_draw_control_line $canv $objid $x0 $y0 $px $py $cpnum $color
+                cadobjects_object_draw_control_line $canv $objid $x1 $y1 $px $py $cpnum $color
+            }
+            incr cpnum
+        }
+    }
+}
+
+
+proc plugin_line_drawobj {canv objid coords tags color fill width dash} {
+    return 0 ;# Also draw default decomposed shape.
 }
 
 

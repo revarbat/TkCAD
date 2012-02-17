@@ -79,6 +79,41 @@ proc plugin_bezierquad_drawctls {canv objid coords color fillcolor} {
         cadobjects_object_draw_controlpoint $canv $objid BEZIERQUAD $cpx $cpy $cpnum $cptype $color $fillcolor
         incr cpnum
     }
+
+    set pi 3.141592653589793236
+    set showdir [/prefs:get show_direction]
+    if {$showdir == 1} {
+        set cpnum 1
+        set ox [lindex $coords 0]
+        set oy [lindex $coords 1]
+        foreach {cpx cpy px py} [lrange $coords 2 end] {
+            if {$px == "" || $py == ""} {
+                break;
+            }
+            if {$px != $cpx || $py != $cpy} {
+                set ox $cpx
+                set oy $cpy
+            }
+            if {$px != $ox || $py != $oy} {
+                set rang [expr {$pi+atan2($py-$oy,$px-$ox)}]
+                set dist [expr {hypot($py-$oy,$px-$ox)}]
+                set rad 10.0
+                set arrowang [expr {$pi/8.0}]
+                if {$rad > $dist*0.75} {
+                    set rad [expr {$dist*0.75}]
+                }
+                set x0 [expr {$rad*cos($rang+$arrowang)+$px}]
+                set y0 [expr {$rad*sin($rang+$arrowang)+$py}]
+                set x1 [expr {$rad*cos($rang-$arrowang)+$px}]
+                set y1 [expr {$rad*sin($rang-$arrowang)+$py}]
+                set ox $px
+                set oy $py
+                cadobjects_object_draw_control_line $canv $objid $x0 $y0 $px $py $cpnum $color
+                cadobjects_object_draw_control_line $canv $objid $x1 $y1 $px $py $cpnum $color
+            }
+            incr cpnum
+        }
+    }
 }
 
 
@@ -360,6 +395,38 @@ proc plugin_bezier_drawctls {canv objid coords color fillcolor} {
             }
         }
         incr cpnum
+    }
+
+    set pi 3.141592653589793236
+    set showdir [/prefs:get show_direction]
+    if {$showdir == 1} {
+        set cpnum 1
+        set ox [lindex $coords 0]
+        set oy [lindex $coords 1]
+        foreach {cpx0 cpy0 cpx1 cpy1 px py} [lrange $coords 2 end] {
+            if {$px == "" || $py == ""} {
+                break;
+            }
+            foreach {ppx ppy} [bezutil_bezier_segment_point 0.95 $ox $oy $cpx0 $cpy0 $cpx1 $cpy1 $px $py] break
+            if {$px != $ppx || $py != $ppy} {
+                set rang [expr {$pi+atan2($py-$ppy,$px-$ppx)}]
+                set dist [expr {hypot($py-$oy,$px-$ox)}]
+                set rad 10.0
+                set arrowang [expr {$pi/8.0}]
+                if {$rad > $dist*0.75} {
+                    set rad [expr {$dist*0.75}]
+                }
+                set x0 [expr {$rad*cos($rang+$arrowang)+$px}]
+                set y0 [expr {$rad*sin($rang+$arrowang)+$py}]
+                set x1 [expr {$rad*cos($rang-$arrowang)+$px}]
+                set y1 [expr {$rad*sin($rang-$arrowang)+$py}]
+                set ox $px
+                set oy $py
+                cadobjects_object_draw_control_line $canv $objid $x0 $y0 $px $py $cpnum $color
+                cadobjects_object_draw_control_line $canv $objid $x1 $y1 $px $py $cpnum $color
+            }
+            incr cpnum
+        }
     }
 }
 
@@ -970,7 +1037,7 @@ proc plugin_bezier_sliceobj {canv objid coords x y} {
     set scalemult [expr {$dpi*$scalefactor}]
     set linewidth [cadobjects_object_stroke_width $canv $objid]
     set closeenough [$canv cget -closeenough]
-    set closeenough [expr {$closeenough/$scalemult+$linewidth/2.0}]
+    set closeenough [expr {($closeenough/$scalemult)+($linewidth/2.0)}]
     set tolerance [expr {1.0/$scalemult}]
 
     set beziers [bezutil_bezier_break_near $x $y $coords $closeenough $tolerance]

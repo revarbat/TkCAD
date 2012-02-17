@@ -1,3 +1,12 @@
+tkCAD 0.228
+Fixed nodeselector rectangular select tool.
+Fixed incorrect unselected display of selected nodes after a drag.
+Fixed displaying of confpane data when in node selector mode.
+Fixed node add & slice for when a snap is slightly off the line.
+Added "Show direction of lines when editing nodes" feature.
+
+
+
 tkCAD 0.227
 Changed DXF export for multi-segment lines to use AcDbPolyLine.
   instead of AcDb2dPolyLine, for compatability with OpenSCAD.

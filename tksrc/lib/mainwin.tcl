@@ -830,7 +830,7 @@ proc mainwin_addline {win} {
     wm title .mnal "Line Coords"
     entry .mnal.ent
     button .mnal.add -text Add -command "mainwin_addline_commit $win"
-    pack .mnal.ent
+    pack .mnal.ent -expand 1 -fill x
     pack .mnal.add
     focus .mnal.ent
     bind .mnal.ent <Key-Return> ".mnal.add invoke"
@@ -840,15 +840,30 @@ proc mainwin_addline {win} {
 
 proc mainwin_addline_commit {win} {
     set canv $win.canv
-    set val [.mnal.ent get]
-    set nuobj [cadobjects_object_create $canv LINE $val {}]
+    set vals [.mnal.ent get]
     destroy .mnal
 
     cadselect_clear $canv
-    cadobjects_object_recalculate $canv $nuobj
-    cadobjects_object_draw $canv $nuobj
-    cadobjects_object_draw_controls $canv $nuobj red
-    cadselect_add $canv $nuobj
+
+    set vals [string map {"\n" ""} $vals]
+    set vals [regsub -all {=} $vals "\n"]
+    foreach val [split $vals "\n"] {
+        set val [regsub -all {[^0-9. -]} $val " "]
+        set val [regsub -all " - " $val " "]
+        set val [regsub -all {   *} $val " "]
+        set val [string trim $val]
+        if {[llength $val] % 2 == 1} {
+            set val [lrange $val 0 end-1]
+        }
+        if {[llength $val] == 0} continue
+        puts stdout "val='$val'"
+
+        set nuobj [cadobjects_object_create $canv LINE $val {}]
+        cadobjects_object_recalculate $canv $nuobj
+        cadobjects_object_draw $canv $nuobj
+        cadobjects_object_draw_controls $canv $nuobj red
+        cadselect_add $canv $nuobj
+    }
     focus $canv
 }
 

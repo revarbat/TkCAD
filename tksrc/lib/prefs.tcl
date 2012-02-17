@@ -17,7 +17,8 @@ global tkcad_prefs_list
 # type name             val min   max tabname  OSes caption
 set tkcad_prefs_list {
   combo ruler_units "Inches (Fractions)" {"Inches (Decimal)" "Inches (Fractions)" Feet Millimeters Centimeters Meters} 20 Display  -  "Default Units"
-  bool  antialiasing       1   0     1 Display  -  "Enable Antialiasing"
+  bool  antialiasing       1   0     1 Display  -  "Enable antialiasing"
+  bool  show_direction     1   0     1 Display  -  "Show line direction when editing nodes."
   bool  hide_splash        0   0     1 Display  -  "Don't display splash screen at startup"
   str   recent_files      ""   0     0 ""	-  "Files recently opened."
   bool  show_grid          1   0     1 ""       -  "Show Grid"

@@ -1,10 +1,19 @@
 proc plugin_nodeadd_execute {canv coords isconf} {
-    set cid [$canv find withtag {current}]
-    if {$cid == ""} {
-        bell
-        return
+    foreach {x y} [cadobjects_scale_coords $canv $coords] break
+    set closeenough 5
+    set x0 [expr {$x-$closeenough}]
+    set y0 [expr {$y-$closeenough}]
+    set x1 [expr {$x+$closeenough}]
+    set y1 [expr {$y+$closeenough}]
+    set cids [$canv find overlapping $x0 $y0 $x1 $y1]
+    set objid ""
+    foreach cid $cids {
+        set oid [cadobjects_objid_from_cid $canv $cid]
+        if {[cadselect_ismember $canv $oid]} {
+            set objid $oid
+            break
+        }
     }
-    set objid [cadobjects_objid_from_cid $canv $cid]
     if {$objid == ""} {
         bell
         return
@@ -55,12 +64,23 @@ proc plugin_nodedel_execute {canv coords isconf} {
 
 
 proc plugin_slice_execute {canv coords isconf} {
-    set cid [$canv find withtag {current}]
-    if {$cid == ""} {
-        bell
-        return
+    foreach {x y} [cadobjects_scale_coords $canv $coords] break
+    set closeenough 5
+    set x0 [expr {$x-$closeenough}]
+    set y0 [expr {$y-$closeenough}]
+    set x1 [expr {$x+$closeenough}]
+    set y1 [expr {$y+$closeenough}]
+    set cids [$canv find overlapping $x0 $y0 $x1 $y1]
+    set objid ""
+    set foundcid ""
+    foreach cid $cids {
+        set oid [cadobjects_objid_from_cid $canv $cid]
+        if {[cadselect_ismember $canv $oid]} {
+            set objid $oid
+            set foundcid $cid
+            break
+        }
     }
-    set objid [cadobjects_objid_from_cid $canv $cid]
     if {$objid == ""} {
         bell
         return
@@ -74,7 +94,7 @@ proc plugin_slice_execute {canv coords isconf} {
     }
     set selids [cadselect_list $canv]
     if {[llength $selids] == 0} {
-        set cid [$canv find withtag current]
+        set cid $foundcid
         set selids [cadobjects_objid_from_cid $canv $cid]
     }
     set selobjs {}

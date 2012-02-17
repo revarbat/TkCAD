@@ -5,7 +5,7 @@ proc tools_startup {} {
     set toolsInfo(TGROUPS) {}
     set toolsInfo(TGROUPNUM) 0
     tool_register_ex "OBJSEL"  "Selector" "Select Objects" {} -icon "tool-objsel"  -cursor "arrow"
-    tool_register_ex "NODESEL" "&Nodes"    "Select &Nodes"  {} -icon "tool-nodesel" -cursor "top_left_arrow" -showctls
+    tool_register_ex "NODESEL" "&Nodes"   "Select &Nodes"  {} -icon "tool-nodesel" -cursor "top_left_arrow" -showctls
 }
 
 
@@ -159,7 +159,7 @@ proc tool_isselector {toolid} {
     if {$tgname == "Selector"} {
         return 1
     }
-    if {$tgname == "Node Selector"} {
+    if {$tgname == "&Nodes"} {
         return 1
     }
     return 0

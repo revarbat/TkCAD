@@ -2927,6 +2927,20 @@ proc cadobjects_redraw {canv {color ""}} {
 }
 
 
+proc cadobjects_filter_cids_for_control_points {canv cids} {
+    set out {}
+    foreach cid $cids {
+        set tags [$canv gettags $cid]
+        foreach tag $tags {
+            if {$tag == "CP"} {
+                lappend out $cid
+            }
+        }
+    }
+    return $out
+}
+
+
 proc cadobjects_objid_and_node_from_cid {canv cid} {
     set objid ""
     set nodenum ""
@@ -3424,6 +3438,7 @@ proc cadobjects_binding_buttonpress {canv type x y} {
                 set cadobjectsInfo($canv-CLICK_NODE) $nodenum
 
                 cadobjects_objcall "clickctl" $canv $objid $nodenum
+                confpane_populate
             } elseif {$type == "OBJ"} {
                 tool_set_state "OBJECTS_MOUSEDOWN"
                 set cid [$canv find withtag current]
@@ -3445,10 +3460,11 @@ proc cadobjects_binding_buttonpress {canv type x y} {
                 set cadobjectsInfo($canv-CLICK_OBJ)  $objid
                 set cadobjectsInfo($canv-CLICK_NODE)  ""
                 cadobjects_objcall "clickobj" $canv $objid $realx $realy
+                confpane_populate
             } else {
                 tool_set_state "SELNODE_RECT_MOUSEDOWN"
                 if {![cadobjects_modkey_isdown SHIFT]} {
-                    cadselect_clear $canv
+                    #cadselect_clear $canv
                     cadselect_node_clear $canv
                 }
                 set cadobjectsInfo($canv-CLICK_OBJ)  ""
@@ -3542,6 +3558,16 @@ proc cadobjects_binding_buttonrelease {canv type x y} {
             }
             set cids [$canv find overlapping $x0 $y0 $x1 $y1]
             foreach cid $cids {
+                set objid [cadobjects_objid_from_cid $canv $cid]
+                if {$objid != ""} {
+                    if {![cadselect_ismember $canv $objid]} {
+                        cadselect_add $canv $objid
+                    }
+                }
+            }
+            set cids [$canv find overlapping $x0 $y0 $x1 $y1]
+            set cids [cadobjects_filter_cids_for_control_points $canv $cids]
+            foreach cid $cids {
                 foreach {objid nodenum} [cadobjects_objid_and_node_from_cid $canv $cid] break
                 if {$objid != "" && $nodenum != ""} {
                     if {![cadselect_ismember $canv $objid]} {
@@ -3577,6 +3603,12 @@ proc cadobjects_binding_buttonrelease {canv type x y} {
                 }
             }
             confpane_populate
+        }
+    } else {
+        if {$toolstate == "SELNODE_RECT_MOUSEDOWN" || $toolstate == "SELOBJ_RECT_MOUSEDOWN"} {
+            if {![cadobjects_modkey_isdown SHIFT]} {
+                cadselect_clear $canv
+            }
         }
     }
     set cadobjectsInfo($canv-CLICK_OBJ)  ""
@@ -3633,6 +3665,8 @@ proc cadobjects_binding_motion {canv x y} {
             $canv configure -cursor crosshair
 
             if {0&&[cadobjects_modkey_isdown SHIFT]} {
+                # Snap to horizontal or vertical move on SHIFT key pressed.
+                # Disabled due to bad side effects.
                 if {abs($newx-$crx) > abs($newy-$cry)} {
                     set newy $cry
                 } else {
@@ -3642,7 +3676,8 @@ proc cadobjects_binding_motion {canv x y} {
                 set dy [expr {$newy-$dry}]
             }
 
-            foreach {objid nodes} [cadselect_node_list $canv] {
+            set allnodes [cadselect_node_list $canv]
+            foreach {objid nodes} $allnodes {
                 set done 0
                 set type [cadobjects_object_gettype $canv $objid]
                 set coords [cadobjects_object_get_coords $canv $objid]
@@ -3653,7 +3688,7 @@ proc cadobjects_binding_motion {canv x y} {
                     }
                 }
                 if {!$done} {
-                    set absmove [expr {[llength $nodes]<2}]
+                    set absmove [expr {[llength $nodes]<2&&[llength $allnodes]==2}]
                     foreach node $nodes {
                         if {$node > 0 && $node <= [llength $coords] / 2} {
                             set pos1 [expr {($node-1)*2}]
@@ -3672,11 +3707,11 @@ proc cadobjects_binding_motion {canv x y} {
                 }
                 cadobjects_object_recalculate $canv $objid
                 cadobjects_object_draw $canv $objid red
+                cadobjects_object_draw_controls $canv $objid red
                 cadselect_add $canv $objid
                 foreach node $nodes {
                     cadselect_node_add $canv $objid $node
                 }
-                cadobjects_object_draw_controls $canv $objid red
             }
 
             set cadobjectsInfo($canv-DRAG_COORDS) [list $x $y]
