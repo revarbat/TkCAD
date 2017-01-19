@@ -362,13 +362,13 @@ proc mlcnc_path_offset {path offset} {
         puts stderr "}\n"
     }
 
-    if {[llength $path] < 4} {
+    if {[llength $path] < 8} {
         return ""
     }
 
     # Remove repeated points.
     set path [mlcnc_path_remove_repeated_points $path]
-    if {[llength $path] < 4} {
+    if {[llength $path] < 8} {
         return ""
     }
 
@@ -926,7 +926,7 @@ proc mlcnc_path_offset {path offset} {
         }
 
         # If subpath has too few sides, skip it.
-        if {[llength $subpath] < 4} continue
+        if {[llength $subpath] < 8} continue
 
         # If subpath has too few good paths, skip it.
         if {$subpathnum != 1 && [llength [lsearch -exact -all $badsides 0]] < 2} continue
@@ -939,6 +939,8 @@ proc mlcnc_path_offset {path offset} {
             set subpath [mlcnc_reorder_polygon_path_by_point $subpath $px $py]
             set subpath [mlcnc_path_remove_repeated_points $subpath]
         }
+        # If subpath has too few sides, skip it.
+        if {[llength $subpath] < 8} continue
         if {$debug} {
             puts -nonewline stderr "Good len=[llength $subpath] {"
             puts -nonewline stderr [format "%.5f %.5f" [lindex $subpath 0] [lindex $subpath 1]]

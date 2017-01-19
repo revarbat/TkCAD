@@ -5,6 +5,7 @@ set -x
 cadsrc=$HOME/dev/tkCAD
 tksrcdir=$cadsrc/tksrc
 resourcesdir=$cadsrc/resources
+
 destapp=$HOME/dev/Tcl/TkCAD.app
 scriptsdir=$destapp/Contents/Resources/Scripts
 
@@ -31,9 +32,10 @@ for ext in $killexts; do
 done
 
 mkdir $destapp/Contents/Resources/bin
-cp -f /usr/local/bin/autotrace  $destapp/Contents/Resources/bin
-cp -f /usr/local/bin/potrace  $destapp/Contents/Resources/bin
-cp -f /usr/local/bin/mkbitmap  $destapp/Contents/Resources/bin
+cp -f /usr/local/bin/autotrace $destapp/Contents/Resources/bin
+cp -f /usr/local/bin/potrace $destapp/Contents/Resources/bin
+cp -f /usr/local/bin/mkbitmap $destapp/Contents/Resources/bin
+cp -f /usr/local/bin/TextToSvgPath $destapp/Contents/Resources/bin
 
 cp -f $resourcesdir/TkCD.icns $destapp/Contents/Resources
 find $scriptsdir -type d -name CVS -exec rm -rf {} \; -prune

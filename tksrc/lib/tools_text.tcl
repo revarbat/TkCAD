@@ -128,10 +128,25 @@ proc plugin_text_usereditobj {canv objid coords} {
 
 
 proc plugin_text_convert_to_bezier {canv font txt} {
+    global root_dir
     set parent [winfo toplevel $canv]
-    set fsiz [expr {[lindex $font 1]+0.0}]
-    set font [lreplace $font 1 1 72]
-    set path [GetFontCurves $parent $font $txt]
+    array set fontinfo [font actual $font]
+    set fsiz [expr {0.0+$fontinfo(-size)}]
+    set ffam $fontinfo(-family)
+    set attrargs {}
+    if {$fontinfo(-slant) == "italic"} {
+        lappend attrargs "-i"
+    }
+    if {$fontinfo(-weight) == "bold"} {
+        lappend attrargs "-b"
+    }
+
+    set texttosvgbin [file normalize [file join $root_dir .. .. bin TextToSvgPath]]
+    if {![file exists $texttosvgbin]} {
+        set texttosvgbin [file normalize [file join / usr local bin TextToSvgPath]]
+    }
+
+    set path [exec $texttosvgbin -f $ffam -s $fsiz {*}$attrargs "$txt"]
     set beziers {}
     set currbez {}
     set pathlen [llength $path]
@@ -146,8 +161,7 @@ proc plugin_text_convert_to_bezier {canv font txt} {
                 set p1x [lindex $path [incr i]]
                 set p1y [lindex $path [incr i]]
 
-                set p1x [expr {$p1x*$fsiz/72.0}]
-                set p1y [expr {$p1y*$fsiz/72.0}]
+                set p1y [expr {-$p1y}]
                 lappend currbez $p1x $p1y
             }
             "L" {
@@ -156,8 +170,7 @@ proc plugin_text_convert_to_bezier {canv font txt} {
                 set p2x [lindex $path [incr i]]
                 set p2y [lindex $path [incr i]]
 
-                set p2x [expr {$p2x*$fsiz/72.0}]
-                set p2y [expr {$p2y*$fsiz/72.0}]
+                set p2y [expr {-$p2y}]
                 lappend currbez $p1x $p1y $p2x $p2y $p2x $p2y
             }
             "C" {
@@ -168,22 +181,28 @@ proc plugin_text_convert_to_bezier {canv font txt} {
                 set p3x [lindex $path [incr i]]
                 set p3y [lindex $path [incr i]]
 
-                set p1x [expr {$p1x*$fsiz/72.0}]
-                set p1y [expr {$p1y*$fsiz/72.0}]
-                set p2x [expr {$p2x*$fsiz/72.0}]
-                set p2y [expr {$p2y*$fsiz/72.0}]
-                set p3x [expr {$p3x*$fsiz/72.0}]
-                set p3y [expr {$p3y*$fsiz/72.0}]
+                set p1y [expr {-$p1y}]
+                set p2y [expr {-$p2y}]
+                set p3y [expr {-$p3y}]
                 lappend currbez $p1x $p1y $p2x $p2y $p3x $p3y
             }
+            "Z" -
             "z" {
                 if {[llength $currbez] > 0} {
+                    set p1x [lindex $currbez end-1]
+                    set p1y [lindex $currbez end]
+                    set p2x [lindex $currbez 0]
+                    set p2y [lindex $currbez 1]
+                    lappend currbez $p1x $p1y $p2x $p2y $p2x $p2y
                     lappend beziers $currbez
                     set currbez {}
                 }
-                set pathlen 0
             }
         }
+    }
+    if {[llength $currbez] > 0} {
+        lappend beziers $currbez
+        set currbez {}
     }
     return $beziers
 }

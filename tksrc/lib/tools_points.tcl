@@ -59,7 +59,7 @@ proc plugin_point_bbox {canv objid coords} {
 
 
 proc plugin_point_register {} {
-    tool_register_ex POINT "&Miscellaneous" "P&oint" {
+    tool_register_ex POINT "&Miscellaneous" "&Point" {
         {1    "Point Location"}
     } -icon "tool-point" -creator
 }

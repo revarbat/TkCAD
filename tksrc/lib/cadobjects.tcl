@@ -934,6 +934,28 @@ proc cadobjects_object_create_noundo {canv type coords {data {}} {objid -1} {lay
     if {$objid == -1} {
         set objid [incr cadobjectsInfo($canv-OBJNUM)]
     }
+    if {$type == "BEZIER"} {
+        if {[llength $coords] < 2} {
+            set coords {0.0 0.0}
+        }
+        set ccount [expr {[llength $coords]/2}]
+        switch -exact -- [expr {$ccount%3}] {
+            1 { }
+            2 {
+                set coords [lrange $coords 0 [expr {$ccount*2-1}]]
+                lappend coords [lindex $coords [expr {$ccount*2-2}]]
+                lappend coords [lindex $coords [expr {$ccount*2-1}]]
+                lappend coords [lindex $coords [expr {$ccount*2-2}]]
+                lappend coords [lindex $coords [expr {$ccount*2-1}]]
+            }
+            0 {
+                set coords [lrange $coords 0 [expr {$ccount*2-1}]]
+                lappend coords [lindex $coords [expr {$ccount*2-2}]]
+                lappend coords [lindex $coords [expr {$ccount*2-1}]]
+            }
+        }
+    }
+
     lappend cadobjectsInfo($canv-OBJECTS) $objid
 
     set cadobjectsInfo($canv-OBJLAYER-$objid) $layerid
@@ -2658,6 +2680,14 @@ proc cadobjects_object_drawobj_from_decomposition {canv objid tags color fill wi
                         foreach {x0 y0} [lrange $path 0 1] break
                         lappend d M $x0 $y0
                         foreach {x1 y1 x2 y2 x3 y3} [lrange $path 2 end] {
+                            if {$y2 == ""} {
+                                set x2 $x1
+                                set y2 $y1
+                            }
+                            if {$y3 == ""} {
+                                set x3 $x2
+                                set y3 $y2
+                            }
                             lappend d C $x1 $y1 $x2 $y2 $x3 $y3
                         }
                         $canv create path $d -fill $pathfill -fillrule evenodd -stroke $color -strokewidth $width -strokelinecap round -strokelinejoin round -strokedasharray $pdash -tags $beztags

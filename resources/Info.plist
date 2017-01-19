@@ -114,7 +114,7 @@
 	<key>CFBundleExecutable</key>
 	<string>TkCAD</string>
 	<key>CFBundleGetInfoString</key>
-	<string>TkCAM 0.205, Copyright © 2008 Belfry Software</string>
+	<string>TkCAD 0.228, Copyright © 2008-2017 Belfry Software</string>
 	<key>CFBundleIconFile</key>
 	<string>TkCD.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -130,13 +130,13 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.205</string>
+	<string>0.228</string>
 	<key>CFBundleSignature</key>
 	<string>TkCD</string>
 	<key>CFBundleVersion</key>
-	<string>0.205</string>
+	<string>0.228</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.3.0</string>
+	<string>10.6.0</string>
 	<key>LSRequiresCarbon</key>
 	<true/>
 	<key>NSAppleScriptEnabled</key>

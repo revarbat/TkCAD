@@ -21,7 +21,7 @@ destapp=$origdir/$appname.app
 rm -rf $destapp
 mkdir $destapp
 
-cd ~/dev/Tcl/head/build/Applications/Utilities/Wish.app
+cd ../resources/TkCAD.app
 
 tar cf - * | ( cd $destapp ; tar xf - )
 

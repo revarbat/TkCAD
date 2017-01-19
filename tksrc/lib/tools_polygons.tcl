@@ -1745,7 +1745,7 @@ proc plugin_polygons_register {} {
         {2    "Opposite Corner"}
         {3    "Radius Center"}
     } -icon "tool-rrect" -creator
-    tool_register_ex REGPOLYGON "&Miscellaneous" "Regular &Polygon" {
+    tool_register_ex REGPOLYGON "&Miscellaneous" "R&egular Polygon" {
         {1    "Center Point"}
         {2    "Polygon Vertex"}
     } -icon "tool-regpolygon" -creator -impfields {SIDES STYLE}
