@@ -990,6 +990,7 @@ proc ffmt_plugin_readfile_svg {win canv filename {svgmat {}}} {
                         set $var $attr($var)
                     }
                 }
+                set points [regsub -all -- {[, \t\r\n][, \t\r\n]*} $points { }]
                 set coords [matrix_transform_coords $mat1 $points]
                 set bbox [svg_bbox_expand $bbox $coords]
                 set newobj [cadobjects_object_create $canv LINE $coords]
@@ -1014,6 +1015,7 @@ proc ffmt_plugin_readfile_svg {win canv filename {svgmat {}}} {
                         set $var $attr($var)
                     }
                 }
+                set points [regsub -all -- {[, \t\r\n][, \t\r\n]*} $points { }]
                 set coords [matrix_transform_coords $mat1 $points]
                 set bbox [svg_bbox_expand $bbox $coords]
                 set newobj [cadobjects_object_create $canv LINE $coords]
